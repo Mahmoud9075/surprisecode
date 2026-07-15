@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎁 SurpriseCode Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Bodoni+Moda:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{background:#0d1f15;color:#ece3d8;font-family:'Tajawal',sans-serif;overflow:hidden;height:100vh;width:100vw}
+
+#starsBg{position:fixed;inset:0;z-index:0;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;animation:starTwinkle linear infinite}
+@keyframes starTwinkle{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+
+.screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;transition:opacity .4s,transform .4s}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(.95)}
+
+/* Name Screen */
+#nameScreen{background:linear-gradient(180deg,#1a2f1f,#0d1f15)}
+.game-logo{font-family:'Bodoni Moda',serif;font-size:clamp(26px,6vw,42px);color:#b89968;margin-bottom:4px;text-align:center}
+.game-sub{font-size:13px;color:rgba(184,153,104,.6);margin-bottom:28px;letter-spacing:2px;text-align:center}
+.name-card{background:rgba(255,255,255,.05);border:1px solid rgba(184,153,104,.3);border-radius:24px;padding:28px;width:100%;max-width:360px;text-align:center}
+.name-card h2{font-size:19px;color:#b89968;margin-bottom:6px}
+.name-card p{font-size:13px;color:rgba(236,227,216,.5);margin-bottom:18px;line-height:1.6}
+.name-input{width:100%;padding:13px 16px;background:rgba(255,255,255,.07);border:1.5px solid rgba(184,153,104,.35);border-radius:12px;color:#ece3d8;font-family:'Tajawal',sans-serif;font-size:16px;text-align:center;outline:none;transition:.3s}
+.name-input:focus{border-color:#b89968;box-shadow:0 0 0 3px rgba(184,153,104,.12)}
+.play-btn{width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,#b89968,#cdb084);color:#1a2f1f;border:none;border-radius:14px;font-family:'Tajawal',sans-serif;font-size:17px;font-weight:900;cursor:pointer;transition:.3s}
+.play-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(184,153,104,.3)}
+.lb-preview{width:100%;max-width:360px;margin-top:18px;background:rgba(255,255,255,.03);border:1px solid rgba(184,153,104,.12);border-radius:16px;padding:14px}
+.lb-title{font-size:12px;color:#b89968;margin-bottom:8px;text-align:center;letter-spacing:1px}
+.lb-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.lb-item:last-child{border-bottom:none}
+.lb-rank{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.r1{background:linear-gradient(135deg,#ffd700,#ffb300);color:#000}
+.r2{background:linear-gradient(135deg,#c0c0c0,#a8a8a8);color:#000}
+.r3{background:linear-gradient(135deg,#cd7f32,#b8690a);color:#fff}
+.rn{background:rgba(255,255,255,.1);color:#ece3d8}
+.lb-name{flex:1;color:#ece3d8}
+.lb-score{color:#b89968;font-weight:700}
+
+/* Game Screen */
+#gameScreen{background:transparent}
+#gameCanvas{position:absolute;inset:0;z-index:5;cursor:crosshair}
+.hud{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:linear-gradient(180deg,rgba(13,31,21,.95),transparent)}
+.hud-score{font-family:'Bodoni Moda',serif;font-size:26px;color:#b89968;font-weight:700;min-width:80px}
+.hud-center{text-align:center}
+.hud-stage-label{font-size:11px;color:#b89968;letter-spacing:2px;text-transform:uppercase}
+.hud-stage-num{font-family:'Bodoni Moda',serif;font-size:22px;color:#fff;font-weight:700;line-height:1}
+.hud-lives{display:flex;gap:4px;justify-content:flex-end;min-width:80px}
+.life{font-size:18px;transition:.3s}
+.life.lost{opacity:.2;transform:scale(.6)}
+
+.knives-bar{position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:20;display:flex;flex-direction:column;gap:3px}
+.k-dot{width:5px;height:20px;background:#b89968;border-radius:3px;transition:.3s;opacity:.85}
+.k-dot.used{opacity:.15;transform:scaleY(.4)}
+
+.stage-progress{position:fixed;top:70px;left:16px;right:16px;z-index:20;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.stage-progress-fill{height:100%;background:linear-gradient(90deg,#b89968,#cdb084);border-radius:2px;transition:width .3s ease}
+
+/* Custom cursor for game */
+#gameCursor{position:fixed;pointer-events:none;z-index:100;transform:translate(-50%,-50%);font-size:24px;transition:transform .05s;display:none}
+
+.throw-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;
+  width:84px;height:84px;border-radius:50%;border:2.5px solid #b89968;
+  background:rgba(184,153,104,.15);
+  color:#b89968;font-size:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);transition:.15s;
+  animation:throwPulse 2s ease-in-out infinite}
+.throw-btn:active{transform:translateX(-50%) scale(.88);background:rgba(184,153,104,.3)}
+@keyframes throwPulse{0%,100%{box-shadow:0 0 0 0 rgba(184,153,104,.3)}50%{box-shadow:0 0 0 12px rgba(184,153,104,0)}}
+
+.game-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;text-align:center;pointer-events:none}
+.msg-txt{font-family:'Bodoni Moda',serif;font-size:clamp(26px,7vw,50px);font-weight:700;opacity:0;animation:msgPop .7s ease forwards}
+@keyframes msgPop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+
+.stage-ann{position:fixed;top:32%;left:50%;transform:translateX(-50%);z-index:25;text-align:center;opacity:0;animation:annIn 2s ease forwards;pointer-events:none}
+@keyframes annIn{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}25%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0}}
+.ann-label{font-size:12px;color:#b89968;letter-spacing:3px;text-transform:uppercase}
+.ann-num{font-family:'Bodoni Moda',serif;font-size:clamp(40px,10vw,70px);color:#fff;font-weight:700;line-height:1}
+
+.boss-alert{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);opacity:0;animation:bossShow 3s ease forwards;pointer-events:none}
+@keyframes bossShow{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.boss-txt{font-family:'Bodoni Moda',serif;font-size:clamp(30px,8vw,58px);color:#e05;font-weight:700;text-shadow:0 0 30px rgba(224,85,85,.8);animation:bossPulse 1s ease-in-out infinite}
+@keyframes bossPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* Result */
+#resultScreen{background:linear-gradient(180deg,rgba(13,31,21,.97),#0d1f15);overflow-y:auto}
+.result-card{background:rgba(255,255,255,.04);border:1px solid rgba(184,153,104,.25);border-radius:26px;padding:28px;width:100%;max-width:360px;text-align:center}
+.result-emoji{font-size:52px;margin-bottom:8px;animation:eBounce 1s ease infinite alternate}
+@keyframes eBounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.result-title{font-family:'Bodoni Moda',serif;font-size:26px;margin-bottom:4px}
+.win{color:#b89968}.lose{color:#e05}
+.result-score{font-size:44px;font-weight:900;color:#b89968;margin:10px 0 4px}
+.result-stage{font-size:13px;color:rgba(236,227,216,.5);margin-bottom:16px}
+.result-hs{font-size:12px;color:#b89968;padding:6px 14px;background:rgba(184,153,104,.08);border-radius:20px;display:inline-block;margin-bottom:14px}
+.coupon{background:linear-gradient(135deg,rgba(184,153,104,.18),rgba(184,153,104,.04));border:1.5px dashed #b89968;border-radius:14px;padding:14px;margin:12px 0;animation:couponGlow 2s ease-in-out infinite}
+@keyframes couponGlow{0%,100%{box-shadow:0 0 0 0 rgba(184,153,104,0)}50%{box-shadow:0 0 20px rgba(184,153,104,.25)}}
+.coupon-label{font-size:11px;color:#b89968;margin-bottom:3px}
+.coupon-code{font-family:'Bodoni Moda',serif;font-size:24px;color:#b89968;font-weight:700;letter-spacing:2px}
+.coupon-disc{font-size:12px;color:#ece3d8;margin-top:3px}
+.rbtn{width:100%;padding:12px;border-radius:12px;border:none;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.3s;margin-top:8px}
+.rbtn-play{background:linear-gradient(135deg,#b89968,#cdb084);color:#1a2f1f}
+.rbtn-play:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(184,153,104,.3)}
+.rbtn-lb{background:rgba(255,255,255,.06);color:#ece3d8;border:1px solid rgba(255,255,255,.12)}
+.rbtn-home{background:transparent;color:rgba(184,153,104,.6);font-size:13px;border:1px solid rgba(184,153,104,.15)}
+.share-wa{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;width:100%;padding:12px;border-radius:12px;border:none;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;transition:.3s}
+.share-wa:hover{transform:translateY(-2px)}
+
+/* Leaderboard */
+#lbScreen{background:linear-gradient(180deg,#1a2f1f,#0d1f15);overflow-y:auto}
+.lb-full{width:100%;max-width:400px}
+.lb-full .lb-item{padding:11px 14px;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:7px;border:1px solid rgba(255,255,255,.05);transition:.3s}
+.lb-full .lb-item.me{border-color:#b89968;background:rgba(184,153,104,.07)}
+.lb-lvl{font-size:11px;color:rgba(184,153,104,.6);margin-top:2px}
+.lb-badge{font-size:10px;padding:2px 7px;border-radius:8px;margin-right:5px}
+.bl{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000}
+.bp{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+.bv{background:linear-gradient(135deg,#b89968,#cdb084);color:#1a2f1f}
+
+.back-btn-g{position:fixed;top:14px;right:14px;z-index:50;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#ece3d8;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s}
+.back-btn-g:hover{background:rgba(184,153,104,.2);border-color:#b89968}
+
+#confCanvas{position:fixed;inset:0;z-index:60;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="starsBg"></div>
+<canvas id="confCanvas"></canvas>
+<div id="gameCursor">🗡️</div>
+
+<!-- Name Screen -->
+<div class="screen" id="nameScreen">
+  <div class="game-logo">🎁 SurpriseCode</div>
+  <div class="game-sub">ألعب واكسب خصومات حصرية</div>
+  <div class="name-card">
+    <h2>أهلاً بيك! 👋</h2>
+    <p>ادخل اسمك عشان تبدأ اللعبة وتظهر في قائمة المتصدرين</p>
+    <input class="name-input" id="nameInput" placeholder="اسمك هنا..." maxlength="20" autocomplete="off">
+    <button class="play-btn" onclick="startGame()">▶ العب دلوقتي</button>
+  </div>
+  <div class="lb-preview">
+    <div class="lb-title">🏆 المتصدرين</div>
+    <div id="lbPreview"></div>
+  </div>
+</div>
+
+<!-- Game Screen -->
+<div class="screen hidden" id="gameScreen">
+  <canvas id="gameCanvas"></canvas>
+  <div class="hud">
+    <div class="hud-score" id="hudScore">0</div>
+    <div class="hud-center">
+      <div class="hud-stage-label">المستوى</div>
+      <div class="hud-stage-num" id="hudStage">1</div>
+    </div>
+    <div class="hud-lives" id="hudLives"></div>
+  </div>
+  <div class="stage-progress"><div class="stage-progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="knives-bar" id="knivesBar"></div>
+  <button class="throw-btn" id="throwBtn">🗡️</button>
+  <div class="game-msg" id="gameMsg"></div>
+</div>
+
+<!-- Result Screen -->
+<div class="screen hidden" id="resultScreen">
+  <button class="back-btn-g" onclick="showScreen('nameScreen')">←</button>
+  <div class="result-card">
+    <div class="result-emoji" id="rEmoji">🎁</div>
+    <div class="result-title" id="rTitle">برافو!</div>
+    <div class="result-score" id="rScore">0</div>
+    <div class="result-stage" id="rStage">المستوى 1</div>
+    <div class="result-hs" id="rHS"></div>
+    <div class="coupon" id="couponBox" style="display:none">
+      <div class="coupon-label">🎉 كوبون خصم!</div>
+      <div class="coupon-code" id="couponCode"></div>
+      <div class="coupon-disc" id="couponDisc"></div>
+    </div>
+    <button class="rbtn rbtn-play" onclick="restartGame()">🎮 العب تاني</button>
+    <button class="share-wa" onclick="shareResult()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      شارك نتيجتك
+    </button>
+    <button class="rbtn rbtn-lb" onclick="showLeaderboard()">🏆 المتصدرين</button>
+    <button class="rbtn rbtn-home" onclick="showScreen('nameScreen')">الرئيسية</button>
+  </div>
+</div>
+
+<!-- Leaderboard Screen -->
+<div class="screen hidden" id="lbScreen">
+  <button class="back-btn-g" onclick="showScreen('resultScreen')">←</button>
+  <div style="font-family:'Bodoni Moda',serif;font-size:24px;color:#b89968;margin-bottom:4px;text-align:center">🏆 المتصدرين</div>
+  <div style="font-size:12px;color:rgba(236,227,216,.4);margin-bottom:20px;text-align:center">أفضل اللاعبين في SurpriseCode</div>
+  <div class="lb-full" id="lbFull"></div>
+</div>
+
+<script>
+// ── Config ──
+var CFG = {
+  knifeScore:10, fruitScore:50, stageClear:100, bossScore:200,
+  baseKnives:7, baseSpeed:0.7,
+  coupon10:5000, coupon30:15000, coupon50:30000
+};
+
+// ── State ──
+var playerName='', score=0, stage=1, lives=3;
+var knivesTotal=0, knivesThrown=0;
+var gameRunning=false, bossMode=false;
+var leaderboard=[];
+var myBest=0, myBestStage=1;
+var animFrameId=null;
+
+// ── Canvas ──
+var canvas, ctx, W, H;
+
+// ── Mouse position for aiming ──
+var mouseX=0, mouseY=0;
+var IS_TOUCH = ('ontouchstart' in window);
+
+// ── Disk ──
+var disk={x:0,y:0,r:0,angle:0,speed:0,dir:1,knives:[],fruits:[]};
+
+// ── Flying knives ──
+var flying=[];
+
+// ── Stars ──
+(function(){
+  var bg=document.getElementById('starsBg');
+  for(var i=0;i<70;i++){
+    var s=document.createElement('div');s.className='star';
+    var sz=Math.random()*2.5+.5;
+    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;animation-duration:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*4)+'s;opacity:'+(Math.random()*.6+.2);
+    bg.appendChild(s);
+  }
+})();
+
+// ── Load / Save ──
+function loadData(){
+  try{
+    var d=JSON.parse(localStorage.getItem('sc_game')||'{}');
+    playerName=d.name||'';myBest=d.best||0;myBestStage=d.bestStage||1;
+    leaderboard=JSON.parse(localStorage.getItem('sc_lb')||'[]');
+  }catch(e){}
+  if(playerName)document.getElementById('nameInput').value=playerName;
+  renderLBPreview();
+}
+function saveData(){
+  localStorage.setItem('sc_game',JSON.stringify({name:playerName,best:myBest,bestStage:myBestStage}));
+}
+function saveScore(){
+  var idx=leaderboard.findIndex(function(p){return p.name===playerName;});
+  if(idx>=0){if(score>leaderboard[idx].score){leaderboard[idx].score=score;leaderboard[idx].stage=stage;}}
+  else leaderboard.push({name:playerName,score:score,stage:stage});
+  leaderboard.sort(function(a,b){return b.score-a.score;});
+  leaderboard=leaderboard.slice(0,100);
+  localStorage.setItem('sc_lb',JSON.stringify(leaderboard));
+}
+
+// ── Screens ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.add('hidden');});
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='nameScreen')renderLBPreview();
+  if(id==='lbScreen')renderLBFull();
+  // Show/hide cursor
+  var cur=document.getElementById('gameCursor');
+  if(id==='gameScreen'&&!IS_TOUCH){cur.style.display='block';}
+  else{cur.style.display='none';}
+}
+
+// ── Mouse tracking for cursor ──
+document.addEventListener('mousemove',function(e){
+  mouseX=e.clientX;mouseY=e.clientY;
+  var cur=document.getElementById('gameCursor');
+  if(cur.style.display!=='none'){
+    cur.style.left=e.clientX+'px';
+    cur.style.top=e.clientY+'px';
+  }
+});
+
+// ── Start ──
+function startGame(){
+  var n=document.getElementById('nameInput').value.trim();
+  if(!n){alert('ادخل اسمك الأول!');return;}
+  playerName=n;saveData();
+  score=0;stage=1;lives=3;gameRunning=false;bossMode=false;
+  showScreen('gameScreen');
+  setupCanvas();
+  initStage();
+}
+
+function setupCanvas(){
+  canvas=document.getElementById('gameCanvas');
+  ctx=canvas.getContext('2d');
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+}
+
+// ── Init Stage ──
+function initStage(){
+  if(animFrameId){cancelAnimationFrame(animFrameId);animFrameId=null;}
+  flying=[];
+  bossMode=(stage%5===0);
+
+  var isMobile=window.innerWidth<600;
+  disk.x=W/2;
+  disk.y=H*0.38;
+  disk.r=Math.min(W,H)*(isMobile?0.22:0.18)*(bossMode?1.15:1);
+  disk.angle=0;
+  disk.dir=(stage>3&&stage%2===0)?-1:1;
+  disk.speed=(CFG.baseSpeed+stage*0.055)*(bossMode?1.35:1);
+  disk.knives=[];
+  disk.fruits=[];
+
+  // Existing knives on disk
+  var existing=Math.min(1+Math.floor(stage/2),7);
+  for(var i=0;i<existing;i++){
+    disk.knives.push({angle:(Math.PI*2/existing)*i});
+  }
+  // Fruit
+  if(Math.random()<0.65) disk.fruits.push({angle:Math.random()*Math.PI*2,collected:false});
+
+  knivesTotal=CFG.baseKnives+Math.floor(stage/2.5);
+  knivesThrown=0;
+
+  updateHUD();
+  renderKnivesBar();
+  showStageAnnounce();
+  if(bossMode)showBossAlert();
+
+  gameRunning=true;
+  animFrameId=requestAnimationFrame(gameLoop);
+}
+
+// ── Announce ──
+function showStageAnnounce(){
+  var old=document.querySelector('.stage-ann');
+  if(old)old.remove();
+  var el=document.createElement('div');el.className='stage-ann';
+  el.innerHTML='<div class="ann-label">'+(bossMode?'⚔️ BOSS FIGHT':'المستوى')+'</div>'
+    +'<div class="ann-num" style="color:'+(bossMode?'#e05':'#fff')+'">'+(bossMode?'BOSS!':stage)+'</div>';
+  document.getElementById('gameScreen').appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove();},2200);
+}
+
+function showBossAlert(){
+  var el=document.createElement('div');el.className='boss-alert';
+  el.innerHTML='<div class="boss-txt">⚔️ BOSS FIGHT! ⚔️</div>';
+  document.getElementById('gameScreen').appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove();},3000);
+}
+
+// ── Game Loop ──
+function gameLoop(){
+  if(!gameRunning){animFrameId=null;return;}
+  update();render();
+  animFrameId=requestAnimationFrame(gameLoop);
+}
+
+// ── Update ──
+function update(){
+  disk.angle+=disk.speed*disk.dir*0.022;
+
+  for(var i=flying.length-1;i>=0;i--){
+    var k=flying[i];
+    k.y-=k.speed;
+    k.trail.push({x:k.x,y:k.y,op:1});
+    if(k.trail.length>10)k.trail.shift();
+
+    var dx=k.x-disk.x, dy=k.y-disk.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+
+    if(dist<=disk.r+22){
+      var hit=false;
+      for(var j=0;j<disk.knives.length;j++){
+        var ek=disk.knives[j];
+        var ea=ek.angle+disk.angle;
+        var ex=disk.x+Math.sin(ea)*(disk.r+32);
+        var ey=disk.y-Math.cos(ea)*(disk.r+32);
+        var dd=Math.sqrt((k.x-ex)*(k.x-ex)+(k.y-ey)*(k.y-ey));
+        if(dd<22){hit=true;break;}
+      }
+      if(hit){
+        flying.splice(i,1);
+        loseLife();
+      } else {
+        var hitAngle=Math.atan2(k.x-disk.x,-(k.y-disk.y))-disk.angle;
+        disk.knives.push({angle:hitAngle,isNew:true});
+        flying.splice(i,1);
+        addScore(CFG.knifeScore);
+        spawnParticle(k.x,k.y,'✨');
+        knivesThrown++;
+        updateProgress();
+        renderKnivesBar();
+        if(knivesThrown>=knivesTotal) setTimeout(stageClear,350);
+      }
+    } else if(k.y<-100){
+      flying.splice(i,1);
+    }
+  }
+
+  // Fruit collision
+  for(var fi=0;fi<disk.fruits.length;fi++){
+    var fr=disk.fruits[fi];
+    if(fr.collected)continue;
+    var fa=fr.angle+disk.angle;
+    var fx=disk.x+Math.sin(fa)*disk.r;
+    var fy=disk.y-Math.cos(fa)*disk.r;
+    for(var fk=0;fk<flying.length;fk++){
+      var fdx=flying[fk].x-fx, fdy=flying[fk].y-fy;
+      if(Math.sqrt(fdx*fdx+fdy*fdy)<30){
+        fr.collected=true;
+        addScore(CFG.fruitScore);
+        spawnParticle(fx,fy,'🍎');
+        showFloatText(fx,fy,'+'+CFG.fruitScore);
+      }
+    }
+  }
+}
+
+// ── Render ──
+function render(){
+  ctx.clearRect(0,0,W,H);
+
+  var bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.7);
+  bg.addColorStop(0,'#1a2f1f');bg.addColorStop(1,'#0d1f15');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Draw trails
+  for(var ti=0;ti<flying.length;ti++){
+    var k=flying[ti];
+    for(var tr=0;tr<k.trail.length;tr++){
+      var t=k.trail[tr];
+      var alpha=0.4*(tr/k.trail.length);
+      ctx.beginPath();ctx.arc(t.x,t.y,3*(tr/k.trail.length),0,Math.PI*2);
+      ctx.fillStyle='rgba(184,153,104,'+alpha+')';ctx.fill();
+    }
+  }
+
+  ctx.save();
+  ctx.translate(disk.x,disk.y);
+  ctx.rotate(disk.angle);
+
+  if(bossMode){ctx.shadowBlur=30;ctx.shadowColor='#e05';}
+
+  // Disk rings
+  var rings=5;
+  for(var r=rings;r>=1;r--){
+    var ratio=r/rings;
+    ctx.beginPath();ctx.arc(0,0,disk.r*ratio,0,Math.PI*2);
+    ctx.fillStyle=bossMode?'hsl('+(r*8)+',55%,'+(18+r*5)+'%)':'hsl('+(200+stage*15)%360+',35%,'+(16+r*5)+'%)';
+    ctx.fill();
+    ctx.strokeStyle=bossMode?'rgba(224,85,85,.25)':'rgba(184,153,104,.18)';
+    ctx.lineWidth=1;ctx.stroke();
+  }
+  ctx.shadowBlur=0;
+
+  ctx.beginPath();ctx.arc(0,0,disk.r,0,Math.PI*2);
+  ctx.strokeStyle=bossMode?'#e05':'#b89968';ctx.lineWidth=bossMode?4:2.5;ctx.stroke();
+
+  // Fruits
+  for(var fi2=0;fi2<disk.fruits.length;fi2++){
+    var fr2=disk.fruits[fi2];
+    if(fr2.collected)continue;
+    ctx.save();ctx.rotate(fr2.angle);ctx.translate(0,-disk.r);
+    ctx.font='20px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowBlur=12;ctx.shadowColor='#ffd700';
+    ctx.fillText('🍎',0,0);ctx.shadowBlur=0;ctx.restore();
+  }
+
+  // Knives on disk
+  for(var ki=0;ki<disk.knives.length;ki++){
+    var dk=disk.knives[ki];
+    ctx.save();ctx.rotate(dk.angle);ctx.translate(0,-disk.r);
+    drawKnifeShape(ctx,dk.isNew?'#ffd700':'#b89968',42);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Flying knives (from bottom center going up)
+  for(var fki=0;fki<flying.length;fki++){
+    var fk2=flying[fki];
+    ctx.save();ctx.translate(fk2.x,fk2.y);
+    // Knife points UP (toward disk)
+    ctx.rotate(Math.PI); // blade points up
+    drawKnifeShape(ctx,'#cdb084',52);
+    ctx.restore();
+  }
+
+  // Aiming line (desktop only)
+  if(!IS_TOUCH && gameRunning && knivesThrown < knivesTotal){
+    ctx.save();
+    ctx.setLineDash([6,10]);
+    ctx.strokeStyle='rgba(184,153,104,0.18)';
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(W/2,H-70);
+    ctx.lineTo(W/2,disk.y+disk.r+10);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+function drawKnifeShape(ctx,color,len){
+  // Blade (points upward in local coords → negative Y)
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(-4,-(len*.5));
+  ctx.lineTo(0,-len);
+  ctx.lineTo(4,-(len*.5));
+  ctx.closePath();
+  ctx.fillStyle=color;
+  ctx.shadowBlur=8;ctx.shadowColor=color;ctx.fill();ctx.shadowBlur=0;
+  // Handle (below blade)
+  ctx.beginPath();
+  if(ctx.roundRect){ctx.roundRect(-5,2,10,20,3);}
+  else{ctx.rect(-5,2,10,20);}
+  ctx.fillStyle=bossMode?'#6b1a1a':'#3d2810';ctx.fill();
+  // Cross guard
+  ctx.beginPath();ctx.rect(-8,-1,16,4);
+  ctx.fillStyle=bossMode?'#8b2020':'#5c3a1e';ctx.fill();
+  // Gem
+  ctx.beginPath();ctx.arc(0,12,3.5,0,Math.PI*2);
+  ctx.fillStyle=bossMode?'#e05':'#b89968';ctx.fill();
+}
+
+// ── Throw ──
+function throwKnife(){
+  if(!gameRunning||knivesThrown>=knivesTotal)return;
+  // Always throw from bottom center straight up
+  flying.push({x:W/2, y:H-90, speed:22, trail:[]});
+  navigator.vibrate&&navigator.vibrate(15);
+}
+
+// ── Input Events ──
+document.addEventListener('DOMContentLoaded',function(){
+  var c=document.getElementById('gameCanvas');
+  if(c){
+    c.addEventListener('click',function(e){e.preventDefault();throwKnife();});
+    c.addEventListener('touchstart',function(e){e.preventDefault();throwKnife();},{passive:false});
+  }
+  var tb=document.getElementById('throwBtn');
+  if(tb){
+    tb.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();throwKnife();});
+    tb.addEventListener('touchstart',function(e){e.preventDefault();e.stopPropagation();throwKnife();},{passive:false});
+  }
+});
+document.addEventListener('keydown',function(e){
+  if((e.code==='Space'||e.key===' ')&&gameRunning){e.preventDefault();throwKnife();}
+});
+
+// ── Stage Clear ──
+function stageClear(){
+  if(!gameRunning)return;
+  gameRunning=false;
+  addScore(CFG.stageClear+(bossMode?CFG.bossScore:0));
+  showMsg(bossMode?'⚔️ Boss هُزم! +'+CFG.bossScore:'🎉 المستوى اكتمل!','#ffd700');
+  launchConfetti();
+  setTimeout(function(){stage++;initStage();},2000);
+}
+
+// ── Lose Life ──
+function loseLife(){
+  lives--;updateHUD();
+  navigator.vibrate&&navigator.vibrate([60,30,60]);
+  // Flash screen red
+  var flash=document.createElement('div');
+  flash.style.cssText='position:fixed;inset:0;background:rgba(224,0,85,.18);z-index:999;pointer-events:none;animation:msgPop .4s ease forwards';
+  document.body.appendChild(flash);
+  setTimeout(function(){if(flash.parentNode)flash.remove();},400);
+  if(lives<=0){
+    gameRunning=false;
+    setTimeout(function(){showResult(false);},800);
+  } else {
+    showMsg('💔 حياة راحت!','#e05');
+  }
+}
+
+// ── Show Result ──
+function showResult(won){
+  if(score>myBest){myBest=score;myBestStage=stage;}
+  saveScore();saveData();
+  setTimeout(function(){
+    showScreen('resultScreen');
+    document.getElementById('rEmoji').textContent=won?'🏆':'💔';
+    document.getElementById('rTitle').textContent=won?'أسطورة!':'خسرت!';
+    document.getElementById('rTitle').className='result-title '+(won?'win':'lose');
+    document.getElementById('rScore').textContent=score.toLocaleString();
+    document.getElementById('rStage').textContent='وصلت للمستوى '+stage;
+    document.getElementById('rHS').textContent='🏅 أعلى نقاط: '+myBest.toLocaleString();
+    var cb=document.getElementById('couponBox');
+    if(score>=CFG.coupon50){cb.style.display='block';document.getElementById('couponCode').textContent='SC-LEGEND-50';document.getElementById('couponDisc').textContent='خصم 50٪ على طلبك! 🎊';launchConfetti();}
+    else if(score>=CFG.coupon30){cb.style.display='block';document.getElementById('couponCode').textContent='SC-MASTER-30';document.getElementById('couponDisc').textContent='خصم 30٪ على طلبك! 🎉';launchConfetti();}
+    else if(score>=CFG.coupon10){cb.style.display='block';document.getElementById('couponCode').textContent='SC-PLAYER-10';document.getElementById('couponDisc').textContent='خصم 10٪ على طلبك! ⭐';}
+    else cb.style.display='none';
+  },500);
+}
+
+function restartGame(){showScreen('gameScreen');score=0;stage=1;lives=3;setupCanvas();initStage();}
+function showLeaderboard(){showScreen('lbScreen');renderLBFull();}
+
+// ── Leaderboard ──
+function renderLBPreview(){
+  var el=document.getElementById('lbPreview');if(!el)return;
+  var top=leaderboard.slice(0,3);
+  if(!top.length){el.innerHTML='<div style="color:rgba(236,227,216,.3);font-size:12px;text-align:center;padding:8px">كن الأول! 🏆</div>';return;}
+  el.innerHTML=top.map(function(p,i){
+    return '<div class="lb-item"><div class="lb-rank '+(i===0?'r1':i===1?'r2':'r3')+'">'+(i===0?'🥇':i===1?'🥈':'🥉')+'</div>'
+      +'<span class="lb-name">'+p.name+'</span><span class="lb-score">'+p.score.toLocaleString()+'</span></div>';
+  }).join('');
+}
+
+function renderLBFull(){
+  var el=document.getElementById('lbFull');if(!el)return;
+  if(!leaderboard.length){el.innerHTML='<div style="text-align:center;color:rgba(236,227,216,.3);padding:40px">لسه مفيش لاعبين</div>';return;}
+  el.innerHTML=leaderboard.slice(0,50).map(function(p,i){
+    var isMe=p.name===playerName;
+    var badge=p.score>=CFG.coupon50?'<span class="lb-badge bl">أسطورة</span>':p.score>=CFG.coupon30?'<span class="lb-badge bp">محترف</span>':p.score>=CFG.coupon10?'<span class="lb-badge bv">VIP</span>':'';
+    return '<div class="lb-item'+(isMe?' me':'')+'"><div class="lb-rank '+(i<3?'r'+(i+1):'rn')+'">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1))+'</div>'
+      +'<div style="flex:1"><div class="lb-name">'+badge+p.name+(isMe?' 👈':'')+'</div><div class="lb-lvl">مستوى '+p.stage+'</div></div>'
+      +'<span class="lb-score">'+p.score.toLocaleString()+'</span></div>';
+  }).join('');
+}
+
+// ── Helpers ──
+function addScore(pts){score+=pts;document.getElementById('hudScore').textContent=score.toLocaleString();}
+
+function updateHUD(){
+  document.getElementById('hudStage').textContent=stage;
+  var el=document.getElementById('hudLives');el.innerHTML='';
+  for(var i=0;i<3;i++){var s=document.createElement('span');s.className='life'+(i>=lives?' lost':'');s.textContent='❤️';el.appendChild(s);}
+}
+
+function updateProgress(){
+  var pct=Math.min(knivesThrown/knivesTotal*100,100);
+  var el=document.getElementById('progressFill');
+  if(el)el.style.width=pct+'%';
+}
+
+function renderKnivesBar(){
+  var el=document.getElementById('knivesBar');if(!el)return;el.innerHTML='';
+  for(var i=0;i<knivesTotal;i++){
+    var d=document.createElement('div');d.className='k-dot'+(i<knivesThrown?' used':'');el.appendChild(d);
+  }
+}
+
+function showMsg(text,color){
+  var el=document.getElementById('gameMsg');
+  el.innerHTML='<div class="msg-txt" style="color:'+(color||'#ffd700')+'">'+text+'</div>';
+  setTimeout(function(){el.innerHTML='';},1600);
+}
+
+function showFloatText(x,y,text){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;left:'+x+'px;top:'+y+'px;color:#ffd700;font-weight:900;font-size:17px;z-index:50;pointer-events:none;animation:msgPop .8s ease forwards;font-family:Tajawal,sans-serif';
+  el.textContent=text;document.body.appendChild(el);
+  setTimeout(function(){el.remove();},900);
+}
+
+function spawnParticle(x,y,emoji){
+  var el=document.createElement('div');
+  el.style.cssText='position:fixed;left:'+x+'px;top:'+y+'px;font-size:20px;z-index:50;pointer-events:none;animation:msgPop 1s ease forwards';
+  el.textContent=emoji;document.body.appendChild(el);
+  setTimeout(function(){el.remove();},1000);
+}
+
+// ── Confetti ──
+function launchConfetti(){
+  var cv=document.getElementById('confCanvas');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  var c=cv.getContext('2d');
+  var cols=['#b89968','#cdb084','#ffd700','#fff','#2b3327','#e8d5b0'];
+  var pieces=[];
+  for(var i=0;i<120;i++){pieces.push({x:Math.random()*cv.width,y:-20,r:Math.random()*5+2,color:cols[Math.floor(Math.random()*cols.length)],vx:(Math.random()-.5)*4,vy:Math.random()*3+1.5,rot:Math.random()*360,rs:(Math.random()-.5)*6,op:1});}
+  var fr=0;
+  function draw(){fr++;c.clearRect(0,0,cv.width,cv.height);
+    pieces.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.rot+=p.rs;if(fr>60)p.op-=.02;
+      c.save();c.globalAlpha=Math.max(0,p.op);c.translate(p.x,p.y);c.rotate(p.rot*Math.PI/180);c.fillStyle=p.color;c.fillRect(-p.r,-p.r/2,p.r*2,p.r);c.restore();});
+    if(fr<120)requestAnimationFrame(draw);else c.clearRect(0,0,cv.width,cv.height);}
+  draw();
+}
+
+// ── Share ──
+function shareResult(){
+  var txt='🎮 لعبت SurpriseCode Game!\n📊 نقاطي: '+score.toLocaleString()+'\n🏆 مستوى: '+stage+'\nألعب انت كمان! surprisecode.com/game';
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+
+// ── Resize ──
+window.addEventListener('resize',function(){
+  if(canvas){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+});
+
+// ── Init ──
+loadData();
+</script>
+</body>
+</html>

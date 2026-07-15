@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SurpriseCode — مفاجآت رقمية فاخرة</title>
+<meta name="description" content="مفاجآت رقمية شيك لكل مناسبة — حب، عيد ميلاد، خطوبة. صفحات تفاعلية مخصصة تفضل معاك طول العمر.">
+<meta property="og:title" content="SurpriseCode — مفاجآت رقمية فاخرة">
+<meta property="og:description" content="بنحوّل أفكارك لمفاجآت رقمية تخطف القلب">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="light">
+
+<div id="cursor"><div id="cursorDot"></div><div id="cursorRing"></div></div>
+<div id="progressBar"></div>
+
+<!-- Preloader -->
+<div id="preloader">
+  <div class="pre-content">
+    <div class="pre-avatar">
+      <img src="dev.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="pre-ic-fb" style="display:none"></div>
+    </div>
+    <div class="pre-name">SurpriseCode</div>
+    <div class="pre-line"></div>
+    <div class="pre-sub" id="preSub">مفاجآت تفضل معاك طول العمر</div>
+  </div>
+</div>
+
+<div id="heroBg"><div class="ov"></div></div>
+<div id="dots"></div>
+<canvas id="particleCanvas"></canvas>
+
+<!-- Nav -->
+<nav id="mainNav">
+  <div class="nav-tools">
+    <button class="icon-btn back-btn" onclick="goBack()" title="رجوع">
+      <svg id="backIc" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <button class="lang-btn" onclick="toggleLang()"><span id="langLbl">EN</span></button>
+    <div class="pill">
+      <button class="icon-btn theme-btn" onclick="toggleTheme()" id="themeBtnWrap" title="السمة">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn cart-btn" onclick="openModal('cartModal')" title="السلة">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </button>
+      <button class="icon-btn game-btn" id="gameBtnNav" onclick="window.open('game.html','_blank')" title="العب">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 2l-4 5-4-5"/><line x1="9" y1="13" x2="9" y2="17"/><line x1="7" y1="15" x2="11" y2="15"/><circle cx="16" cy="14" r="1" fill="currentColor"/><circle cx="18" cy="16" r="1" fill="currentColor"/></svg>
+      </button>
+      <button class="icon-btn admin-btn" onclick="openModal('adminModal')" title="الأدمن">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a onclick="scrollTo2('home')" data-t="nav_home">الرئيسية</a>
+    <a onclick="scrollTo2('about')" data-t="nav_about">نبذة عني</a>
+    <a onclick="scrollTo2('designs')" data-t="nav_designs">الديزاينات</a>
+    <a onclick="scrollTo2('pricing')" data-t="nav_pricing">الأسعار</a>
+    <a onclick="scrollTo2('steps')" data-t="nav_steps">الخطوات</a>
+    <a onclick="scrollTo2('reviews')" data-t="nav_reviews">آراء العملاء</a>
+    <a onclick="scrollTo2('faq')" data-t="nav_faq">أسئلة</a>
+    <a href="/policies.html">📜 السياسات</a>
+  </div>
+  <div class="logo" onclick="scrollTo2('home')">
+    <span class="logo-txt">SurpriseCode</span>
+    <div class="logo-badge">
+      <img src="dev.png" class="logo-img" onerror="this.style.display='none';this.parentElement.style.background='transparent'">
+    </div>
+  </div>
+  <button class="icon-btn menu-toggle" onclick="toggleMenu()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="home">
+  <div class="hero-tag" data-t="hero_tag">مفاجآت ديچيتال شيك جداً</div>
+  <h1 class="hero-title"><span class="morph-text" id="morphText">SurpriseCode</span> <span data-t="hero_title_2">تفضل معاك طول العمر</span></h1>
+  <div class="divider"><span></span><span class="div-diamond">◆</span><span></span></div>
+  <p class="hero-p" data-t="hero_sub">بنحكي قصتكم بأحلى التفاصيل وبتصميم مودرن وشيك.</p>
+  <div class="cta-row">
+    <button class="btn fill ripple" onclick="scrollTo2('designs')" data-t="cta1">ابدأ حكايتك</button>
+    <button class="btn ghost ripple" onclick="openModal('trackModal')" data-t="cta_track">تتبع طلبك</button>
+  </div>
+  <div class="trust-badges">
+    <div class="badge"><span class="badge-ic">🛡️</span><span data-t="b1">١٠٠٪ آمن</span></div>
+    <div class="badge"><span class="badge-ic">⚡</span><span data-t="b2">رد خلال ١٥ دقيقة</span></div>
+    <div class="badge"><span class="badge-ic">💎</span><span data-t="b3">ضمان الجودة</span></div>
+    <div class="badge"><span class="badge-ic">🔄</span><span data-t="b4">خصم ١٥٪ للطلب التاني</span></div>
+  </div>
+</section>
+
+<!-- About -->
+<section class="block" id="about">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="about_tag">عن المطوّر</div><h2 data-t="about_h">نبذة عني</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="about-wrap reveal">
+    <div class="about-av"><img src="dev.png" alt="Developer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="about-av-fallback">👨‍💻</div></div>
+    <h3 class="about-name-anim">مرحباً بك في SurpriseCode 🎁</h3>
+    <div class="about-bio-wrap">
+      <p class="about-bio-line" style="--d:0s">هنا تتحول الأفكار إلى مشاريع وتجارب رقمية مميزة تجمع بين البساطة والإبداع.</p>
+      <p class="about-bio-line" style="--d:.2s">أنا خريج علوم الحاسب وشغوف بتطوير الويب، أحوّل الأفكار إلى تطبيقات عملية جميلة.</p>
+      <p class="about-bio-line" style="--d:.4s">أصمم هدايا رقمية تفاعلية تُشارك مع شخص مميز وتمنح لحظة بسيطة ذكرى لا تُنسى.</p>
+      <p class="about-bio-line" style="--d:.6s">أؤمن أن الأشياء البسيطة قد تترك أثراً أكبر مما نتخيل.</p>
+      <p class="about-bio-line about-bio-avail" style="--d:.8s">✅ متاح للعمل الحر، والتعاون في مشاريع الويب، وفرص التدريب.</p>
+      <p class="about-bio-line about-bio-thanks" style="--d:1s">شكراً لكونك جزءاً من هذه الرحلة 🌟</p>
+    </div>
+    <div class="about-stats">
+      <div class="astat"><div class="astat-num" data-count="50">0</div><div class="astat-lbl" data-t="as1">مفاجأة</div></div>
+      <div class="astat"><div class="astat-num" data-count="100">0</div><div class="astat-lbl" data-t="as2">عميل سعيد</div></div>
+      <div class="astat"><div class="astat-num" data-count="5">0</div><div class="astat-lbl" data-t="as3">★ تقييم</div></div>
+    </div>
+    <div class="about-tags"><span data-t="atag1">تطوير ويب</span><span data-t="atag2">تصميم بحب</span><span data-t="atag3">متخرج جديد</span><span data-t="atag4">أفكار مبتكرة</span></div>
+    <div class="store-info-box">
+      <div class="store-info-title">🏪 عن SurpriseCode</div>
+      <p>SurpriseCode متجر إلكتروني مصري بيقدّم مفاجآت وهدايا رقمية تفاعلية — صفحات مخصصة لأعياد الميلاد، الخطوبة، والمناسبات الرومانسية. خدمة أونلاين بالكامل، بنوصل لأي حد في مصر وخارجها.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Designs -->
+<section class="block" id="designs">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="designs_tag">أعمالنا</div><h2 data-t="designs_h">المجموعة الأساسية</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="designs-grid" id="designsGrid"></div>
+
+  <div class="custom-order-box">
+    <div class="custom-order-icon">✨</div>
+    <div class="custom-order-title">عندك فكرة مختلفة؟</div>
+    <div class="custom-order-sub">اكتبلنا اللي في بالك، وإحنا نصمملك حاجة مخصصة بسعر يناسبها</div>
+    <textarea id="customOrderText1" class="custom-order-textarea" placeholder="مثال: عايز صفحة تكريم لصاحبي بمناسبة تخرجه، بصوره وذكرياتنا سوا..."></textarea>
+    <button class="mbtn ripple" onclick="sendCustomOrder('customOrderText1')">📩 ابعت طلبك على واتساب</button>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="block" id="pricing">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="pricing_tag">الأسعار</div><h2 data-t="pricing_h">اختار الباقة المناسبة</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="pricing-grid" id="pricingGrid"></div>
+
+  <div class="custom-order-card reveal">
+    <div class="co-content">
+      <span class="co-emoji">✨</span>
+      <div><h3 data-t="co_title">طلب خاص؟</h3><p data-t="co_desc">عندك فكرة مختلفة؟ احكيلنا بالتفصيل وهنعملك مفاجأة على قد خيالك.</p></div>
+    </div>
+    <button class="btn fill ripple" onclick="openModal('customModal')" data-t="co_btn">ابعت طلبك</button>
+  </div>
+</section>
+
+<!-- Steps -->
+<section class="block" id="steps">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="steps_tag">بنعمل إيه</div><h2 data-t="steps_h">خطواتك عشان تطلب مفاجأتك</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="steps-timeline" id="stepsGrid"></div>
+</section>
+
+<!-- Why - Bento Grid -->
+<section class="block" id="why">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="why_tag">ليه إحنا؟</div><h2 data-t="why_h">بنهتم بأدق التفاصيل</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="bento-grid" id="whyGrid"></div>
+</section>
+
+<!-- Reviews -->
+<section class="block" id="reviews">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="reviews_tag">آراء العملاء</div><h2 data-t="reviews_h">بيقولوا إيه عننا؟</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="reviews-carousel" id="reviewsCarousel"></div>
+  <div class="reviews-dots" id="reviewsDots"></div>
+  <div class="add-review-wrap reveal">
+    <button class="btn fill ripple" onclick="openModal('reviewModal')" data-t="add_review">⭐ أضف تقييمك</button>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="block" id="faq">
+  <div class="sec-head reveal"><div class="sec-tag" data-t="faq_tag">أسئلة شائعة</div><h2 data-t="faq_h">عندك سؤال؟</h2><div class="mini-div"><span></span><span class="div-diamond">◆</span><span></span></div></div>
+  <div class="faq-list reveal" id="faqList"></div>
+</section>
+
+<!-- CTA -->
+<section class="block" id="cta-final">
+  <div class="cta-card reveal">
+    <div class="cta-glow"></div>
+    <div class="sec-tag" data-t="cf_tag">ابدأ حكايتك</div>
+    <h2 data-t="cf_h">خلّينا نعمل لك أحلى مفاجأة</h2>
+    <p data-t="cf_p">كل مناسبة حلوة تستاهل لمسة مميزة.</p>
+    <button class="btn fill ripple" onclick="scrollTo2('designs')" data-t="cf_btn">ابدأ حكايتك</button>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-foot">
+  <div class="foot-grid">
+    <div class="foot-col foot-brand">
+      <span class="logo-txt">SurpriseCode</span>
+      <p data-t="f_tagline">بنعمل مفاجآت ديچيتال متتنسيش.</p>
+      <div class="foot-social" style="justify-content:flex-start">
+        <a href="https://wa.me/201023514568" target="_blank" class="social-btn social-wa">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </a>
+        <a href="https://instagram.com/surpisecode" target="_blank" class="social-btn social-ig">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="foot-col">
+      <h5 data-t="f_browse">تصفّح</h5>
+      <a onclick="scrollTo2('about')" data-t="nav_about">نبذة عني</a>
+      <a onclick="scrollTo2('designs')" data-t="nav_designs">الديزاينات</a>
+      <a onclick="scrollTo2('pricing')" data-t="nav_pricing">الأسعار</a>
+      <a onclick="scrollTo2('steps')" data-t="nav_steps">الخطوات</a>
+      <a onclick="scrollTo2('faq')" data-t="nav_faq">أسئلة شائعة</a>
+    </div>
+    <div class="foot-col">
+      <h5 data-t="f_quick">لينكات سريعة</h5>
+      <a onclick="openModal('cartModal')" data-t="cart_h">السلة</a>
+      <a onclick="openModal('trackModal')" data-t="cta_track">تتبع الطلب</a>
+      <a href="https://wa.me/201023514568" target="_blank">WhatsApp</a>
+      <a href="https://instagram.com/surpisecode" target="_blank">Instagram</a>
+    </div>
+    <div class="foot-col">
+      <h5>السياسات</h5>
+      <a href="/policies.html">🔒 الخصوصية</a>
+      <a href="/policies.html">💰 الاسترجاع والإلغاء</a>
+      <a href="/policies.html">🚚 الشحن والتسليم</a>
+      <a href="mailto:surprisecode3@gmail.com">📧 surprisecode3@gmail.com</a>
+      <span style="font-size:12px;color:var(--txt3);display:block;margin-top:4px">🌐 خدمة أونلاين بالكامل</span>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <div class="foot-copy"><span data-t="footer_passion">صُنع بشغف من SurpriseCode</span> © 2026</div>
+  </div>
+</footer>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<a class="wa-float" href="https://wa.me/201023514568" target="_blank">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- Modals -->
+<div class="modal" id="cartModal"><div class="modal-card">
+  <div class="modal-head"><button class="modal-close" onclick="closeModal('cartModal')">✕</button><h3 data-t="cart_h">🛒 سلة التسوق</h3></div>
+  <div id="cartItems"></div><div class="total-row" id="cartTotal"></div>
+  <button class="mbtn ripple" onclick="closeModal('cartModal');openModal('coModal');renderCheckout()" data-t="cart_checkout">إتمام الطلب</button>
+  <button class="mbtn-ghost ripple" onclick="clearCart()" data-t="cart_clear">مسح السلة</button>
+</div></div>
+
+<div class="modal" id="coModal"><div class="modal-card">
+  <div class="modal-head"><button class="modal-close" onclick="closeModal('coModal')">✕</button><h3 data-t="co_h">إتمام الطلب</h3></div>
+  <div id="coSummary"></div>
+  <div id="coPaymentMethods"></div>
+  <div class="steps-pay">
+    <div class="spay"><span class="n">1</span><span data-t="co_s1">حوّل قيمة الطلب على الرقم أعلاه.</span></div>
+    <div class="spay"><span class="n">2</span><span data-t="co_s2">صوّر إيصال التحويل.</span></div>
+    <div class="spay"><span class="n">3</span><span data-t="co_s3">املأ بياناتك واضغط إرسال.</span></div>
+  </div>
+  <div class="field"><label data-t="f_name">اسمك</label><input id="co_name" placeholder="محمد أحمد" oninput="validateName(this);buildCheckout()"></div>
+  <div class="field"><label data-t="co_phone">رقم تليفونك</label><input id="co_phone" placeholder="01xxxxxxxxx" type="tel" inputmode="numeric" oninput="validatePhone(this);buildCheckout()"></div>
+  <div class="field"><label data-t="co_extra">طلب إضافي (اختياري)</label><textarea id="co_extra" oninput="buildCheckout()"></textarea></div>
+  <div class="field">
+    <label>صورة إيصال التحويل</label>
+    <div class="img-upload-area" onclick="document.getElementById('receiptInput').click()" style="padding:12px">
+      <div class="img-upload-icon">📎</div>
+      <div class="img-upload-text" id="receiptLabel">ارفع صورة الإيصال (اختياري)</div>
+    </div>
+    <input type="file" id="receiptInput" accept="image/*" style="display:none" onchange="handleReceiptUpload(this)">
+    <img id="receiptPreview" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:160px;object-fit:contain">
+  </div>
+  <p style="font-size:11.5px;color:var(--txt3);text-align:center;margin-bottom:10px">بالضغط على "تأكيد وإرسال" إنك موافق على <a href="/policies.html" target="_blank" style="color:var(--gold)">سياسة الاسترجاع والإلغاء</a></p>
+  <a id="co_send" class="mbtn wa ripple" href="#" onclick="orderSent(event)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span data-t="co_confirm">تأكيد وإرسال</span>
+  </a>
+</div></div>
+
+<div class="modal" id="trackModal"><div class="modal-card">
+  <div class="modal-head"><button class="modal-close" onclick="closeModal('trackModal')">✕</button><h3 data-t="track_h">📦 تتبع طلبك</h3></div>
+  <div class="field"><label data-t="track_phone">رقم تليفونك</label><input id="track_phone" placeholder="01xxxxxxxxx" type="tel" inputmode="numeric"></div>
+  <button class="mbtn ripple" onclick="trackOrder()" data-t="track_btn">تتبع</button>
+  <div id="trackResult" style="margin-top:16px"></div>
+</div></div>
+
+<div class="modal" id="customModal"><div class="modal-card">
+  <div class="modal-head"><button class="modal-close" onclick="closeModal('customModal')">✕</button><h3 data-t="co_h">✨ طلب خاص</h3></div>
+  <div class="field"><label data-t="f_name">اسمك</label><input id="custom_name" placeholder="محمد أحمد" oninput="validateName(this)"></div>
+  <div class="field"><label data-t="co_phone">رقم تليفونك</label><input id="custom_phone" placeholder="01xxxxxxxxx" type="tel" inputmode="numeric" oninput="validatePhone(this)"></div>
+  <div class="field"><label data-t="custom_idea">فكرتك بالتفصيل</label><textarea id="custom_idea" placeholder="احكيلنا عن المناسبة وإيه اللي بتحلم بيه..." style="min-height:120px"></textarea></div>
+  <div class="field"><label data-t="custom_budget">الميزانية التقريبية</label><input id="custom_budget" placeholder="مثلاً: 300 ج.م" inputmode="numeric"></div>
+  <a id="custom_send" class="mbtn wa ripple" href="#" target="_blank">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span data-t="co_confirm">إرسال الطلب</span>
+  </a>
+</div></div>
+
+<div class="modal" id="adminModal"><div class="modal-card">
+  <div class="modal-head"><button class="modal-close" onclick="closeModal('adminModal')">✕</button><h3 id="admTitle" data-t="adm_h">دخول الأدمن</h3></div>
+  <div id="adminLogin">
+    <div class="lock-ic">🔐</div>
+    <p style="text-align:center;color:var(--txt3);margin-bottom:18px;font-size:15px">هذه الصفحة للمدير فقط</p>
+    
+    <!-- Step 1: Email -->
+    <div id="otpStep1">
+      <div class="field">
+        <label>إيميلك</label>
+        <input id="adm_email" type="email" placeholder="example@gmail.com" autocomplete="email" inputmode="email">
+      </div>
+      <div id="loginError" style="color:#e05;font-size:13px;text-align:center;margin-bottom:8px;display:none"></div>
+      <button class="mbtn ripple" onclick="requestOTP()" id="otpBtn">📧 ابعتلي الكود</button>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="otpStep2" style="display:none">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:32px;margin-bottom:8px">📬</div>
+        <p style="font-size:14px;color:var(--txt2)">تم إرسال كود من 6 أرقام على إيميلك</p>
+        <p style="font-size:12px;color:var(--txt3);margin-top:4px">الكود صالح 10 دقائق</p>
+      </div>
+      <div class="field">
+        <label>الكود السري</label>
+        <input id="adm_otp" type="text" placeholder="● ● ● ● ● ●" maxlength="6" inputmode="numeric" 
+          style="text-align:center;font-size:28px;letter-spacing:8px;font-family:var(--display)"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length===6)verifyOTP()">
+      </div>
+      <div id="otpError" style="color:#e05;font-size:13px;text-align:center;margin-bottom:8px;display:none"></div>
+      <button class="mbtn ripple" onclick="verifyOTP()" id="verifyBtn">✅ تأكيد الدخول</button>
+      <button class="mbtn-ghost" onclick="backToEmail()" style="margin-top:8px">← رجوع</button>
+      <div style="text-align:center;margin-top:12px">
+        <span id="resendTimer" style="font-size:12px;color:var(--txt3)"></span>
+        <button id="resendBtn" onclick="requestOTP()" style="display:none;background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;font-family:var(--body)">إعادة إرسال الكود</button>
+      </div>
+    </div>
+  </div>
+  <div id="adminPanel" style="display:none">
+    <div class="adm-hero">
+      <div class="adm-hero-ic">🛠️</div>
+      <div style="flex:1">
+        <div class="adm-hero-title">لوحة تحكم SurpriseCode</div>
+        <div class="adm-hero-sub">تحكّم كامل في المشروع من هنا</div>
+      </div>
+      <button onclick="copyPoliciesLink()" style="background:none;border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:var(--body);white-space:nowrap">📋 نسخ رابط السياسات</button>
+    </div>
+    <div class="adm-tabs">
+      <button class="adm-tab active" onclick="showAdmTab('projects',this)" data-t="adm_tab_proj">📦 المشاريع</button>
+      <button class="adm-tab" onclick="showAdmTab('pricing',this)">💳 الباقات</button>
+      <button class="adm-tab" onclick="showAdmTab('orders',this)" data-t="adm_tab_orders">🧾 الطلبات</button>
+      <button class="adm-tab" onclick="showAdmTab('reviews',this)" data-t="adm_tab_rev">⭐ التقييمات</button>
+      <button class="adm-tab" onclick="showAdmTab('stats',this)" data-t="adm_tab_stats">📊 إحصائيات</button>
+      <button class="adm-tab" onclick="showAdmTab('security',this)">🔐 الأمان</button>
+      <button class="adm-tab" onclick="showAdmTab('settings',this)">⚙️ الإعدادات</button>
+    </div>
+    <div id="admProjects" class="adm-pane">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <h4 class="adm-sec-title" id="projFormTitle" style="margin:0;flex:1">➕ إضافة مشروع</h4>
+        <button id="projCancelEdit" onclick="cancelEditProject()" style="display:none;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:var(--body)">✕ إلغاء</button>
+      </div>
+      <input type="hidden" id="np_edit_id">
+      <div class="field"><label>اسم المشروع</label><input id="np_name" placeholder="مثال: عيد ميلاد"></div>
+      <div class="field">
+        <label>أيقونة المشروع</label>
+        <div id="iconPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+          <!-- بيتملى من الجافاسكريبت -->
+        </div>
+        <input id="np_icon" placeholder="أو اكتب إيموجي من عندك 🎈" style="text-align:center;font-size:20px" maxlength="4">
+      </div>
+      <div class="field"><label>الوصف القصير</label><input id="np_desc" placeholder="جملة وصف قصيرة للكارت"></div>
+      <div class="field"><label>تفاصيل المشروع (تظهر في صفحة التفاصيل)</label><textarea id="np_about" placeholder="اكتب وصف تفصيلي للمشروع هنا..." style="min-height:80px"></textarea></div>
+      <div class="field"><label>السعر (ج.م)</label><input id="np_price" type="number" min="0" inputmode="numeric" placeholder="150"></div>
+      <div class="field"><label>السعر قبل الخصم (اختياري — سيبه فاضي لو مفيش خصم)</label><input id="np_original_price" type="number" min="0" inputmode="numeric" placeholder="مثال: 999"></div>
+      <div class="field"><label>لينك انستاجرام (اختياري)</label><input id="np_instagram" placeholder="https://instagram.com/..."></div>
+      <div class="field">
+        <label>صور المشروع</label>
+        <div class="img-upload-area" onclick="document.getElementById('projImgInput').click()" title="اضغط لإضافة صور">
+          <div class="img-upload-icon">🖼️</div>
+          <div class="img-upload-text">اضغط لإضافة صور</div>
+        </div>
+        <input type="file" id="projImgInput" accept="image/*" multiple style="display:none" onchange="handleImgUpload(this)">
+        <div id="imgPreviewList" class="img-preview-list"></div>
+      </div>
+      <button class="mbtn ripple" id="projSaveBtn" onclick="saveProject()">💾 حفظ المشروع</button>
+      <h4 class="adm-sec-title" style="margin-top:20px" data-t="adm_list">المشاريع الحالية</h4>
+      <div id="adminProjList"></div>
+    </div>
+
+    <div id="admPricing" class="adm-pane" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <h4 class="adm-sec-title" id="planFormTitle" style="margin:0;flex:1">➕ إضافة باقة</h4>
+        <button id="planCancelEdit" onclick="cancelEditPlan()" style="display:none;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:var(--body)">✕ إلغاء</button>
+      </div>
+      <input type="hidden" id="pl_edit_id">
+      <div class="field">
+        <label>أيقونة الباقة</label>
+        <div id="planIconPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px"></div>
+        <input id="pl_icon" placeholder="أو اكتب إيموجي 💎" style="text-align:center;font-size:20px" maxlength="4">
+      </div>
+      <div class="field"><label>اسم الباقة (عربي)</label><input id="pl_name_ar" placeholder="مثال: Premium"></div>
+      <div class="field"><label>اسم الباقة (إنجليزي)</label><input id="pl_name_en" placeholder="e.g. Premium"></div>
+      <div class="field"><label>السعر (ج.م)</label><input id="pl_price" type="number" min="0" placeholder="180"></div>
+      <div class="field"><label>وصف قصير (عربي)</label><input id="pl_desc_ar" placeholder="الأكتر طلباً"></div>
+      <div class="field"><label>وصف قصير (إنجليزي)</label><input id="pl_desc_en" placeholder="Most popular"></div>
+      <div class="field"><label>المميزات (سطر لكل ميزة - عربي)</label><textarea id="pl_features_ar" placeholder="كل مميزات Basic&#10;صور مخصصة&#10;تسليم 24 ساعة" style="min-height:70px"></textarea></div>
+      <div class="field"><label>المميزات (سطر لكل ميزة - إنجليزي)</label><textarea id="pl_features_en" placeholder="All Basic features&#10;Custom photos&#10;24h delivery" style="min-height:70px"></textarea></div>
+      <div class="field" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="pl_featured" style="width:auto">
+        <label style="margin:0">تمييز الباقة (شارة "الأشهر")</label>
+      </div>
+      <button class="mbtn ripple" id="planSaveBtn" onclick="savePlan()">💾 حفظ الباقة</button>
+      <h4 class="adm-sec-title" style="margin-top:20px">الباقات الحالية</h4>
+      <div id="adminPlanList"></div>
+    </div>
+
+    <div id="admOrders" class="adm-pane" style="display:none">
+      <h4 class="adm-sec-title">📦 الطلبات</h4>
+      <div class="adm-tabs" style="margin-bottom:12px;overflow-x:auto;white-space:nowrap">
+        <button class="adm-tab active" onclick="filterOrders('all',this)" style="font-size:12px;padding:6px 12px">الكل</button>
+        <button class="adm-tab" onclick="filterOrders('pending',this)" style="font-size:12px;padding:6px 12px">⏳ قيد المراجعة</button>
+        <button class="adm-tab" onclick="filterOrders('done',this)" style="font-size:12px;padding:6px 12px">✅ تم التسليم</button>
+        <button class="adm-tab" onclick="filterOrders('cancelled',this)" style="font-size:12px;padding:6px 12px">❌ ملغي</button>
+      </div>
+      <div id="adminOrderList"></div>
+    </div>
+    <div id="admReviews" class="adm-pane" style="display:none">
+      <h4 class="adm-sec-title" data-t="adm_rev_list">التقييمات</h4>
+      <div id="adminRevList"></div>
+    </div>
+    <div id="admStats" class="adm-pane" style="display:none">
+      <div class="stat-grid">
+        <div class="stat"><div class="num" id="statVisits">0</div><div class="lbl">زيارات اليوم</div></div>
+        <div class="stat"><div class="num" id="statVisitsWeek">0</div><div class="lbl">الأسبوع</div></div>
+        <div class="stat"><div class="num" id="statVisitsMonth">0</div><div class="lbl">الشهر</div></div>
+        <div class="stat"><div class="num" id="statProjects">0</div><div class="lbl">المشاريع</div></div>
+        <div class="stat"><div class="num" id="statOrders">0</div><div class="lbl">طلبات اليوم</div></div>
+        <div class="stat"><div class="num" id="statRevenue">0</div><div class="lbl">إيراد اليوم ج.م</div></div>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:var(--bg2);border-radius:12px;border:1px solid var(--panel-br)">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:10px;letter-spacing:1px">📊 مصادر الزيارات</div>
+        <div id="sourcesChart"><p style="color:var(--txt3);font-size:12px;text-align:center">لا يوجد بيانات بعد</p></div>
+      </div>
+      <div style="margin-top:12px;padding:14px;background:var(--bg2);border-radius:12px;border:1px solid var(--panel-br)">
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:10px;letter-spacing:1px">🌍 الدول</div>
+        <div id="countriesChart"><p style="color:var(--txt3);font-size:12px;text-align:center">لا يوجد بيانات بعد</p></div>
+      </div>
+    </div>
+    <div id="admSecurity" class="adm-pane" style="display:none">
+      <h4 class="adm-sec-title">🔐 سجل الدخول</h4>
+      <div id="loginLog"></div>
+
+      <h4 class="adm-sec-title" style="margin-top:20px">👥 إضافة مساعد أدمن</h4>
+      <p style="font-size:12px;color:var(--txt3);margin-bottom:10px;line-height:1.6">هيتبعتله الكود على إيميله عشان يدخل — إنت اللي بتحدد من يدخل</p>
+      <div class="field"><label>إيميل المساعد</label><input id="sub_email" type="email" placeholder="example@gmail.com"></div>
+      <div class="field"><label>الاسم (اختياري)</label><input id="sub_name" placeholder="اسم المساعد"></div>
+      <button class="mbtn ripple" onclick="addSubAdmin()" style="margin-bottom:8px">📧 إضافة وإرسال الكود</button>
+      <div id="subAdminList" style="margin-top:8px"></div>
+
+      <h4 class="adm-sec-title" style="margin-top:20px">🚫 الـ IPs المحظورة</h4>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="newBlockIP" placeholder="أدخل IP للحظر" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--panel-br);background:var(--bg2);color:var(--txt);font-family:var(--body);font-size:13px">
+        <button class="mbtn ripple" style="padding:8px 14px;font-size:13px" onclick="blockIP()">🚫 حظر</button>
+      </div>
+      <div id="blockedIPsList"></div>
+    </div>
+
+    <div id="admSettings" class="adm-pane" style="display:none">
+      <div class="adm-card">
+        <div class="adm-card-head">
+          <span class="adm-card-ic">🔧</span>
+          <div>
+            <div class="adm-card-title">إيقاف الموقع مؤقتاً (وضع الصيانة)</div>
+            <div class="adm-card-sub">هيقفل قدام الزوار بس، وإنت لسه تدخل كأدمن عادي</div>
+          </div>
+        </div>
+        <div id="maintStatusBadge" class="maint-status"></div>
+        <div class="maint-btns">
+          <button class="mbtn ripple" style="background:#25d366;color:#fff;margin-top:0" onclick="setMaintenance(false)">🟢 تشغيل الموقع</button>
+          <button class="mbtn ripple" style="background:#c0392b;color:#fff;margin-top:0" onclick="setMaintenance(true)">🔴 إيقاف الموقع</button>
+        </div>
+        <div class="field" style="margin-top:14px"><label>رسالة الصيانة اللي هتظهر للزوار</label><textarea id="maintMsg" placeholder="الموقع تحت الصيانة. نرجع قريباً! 🔧" style="min-height:56px"></textarea></div>
+        <button class="mbtn-ghost ripple" onclick="saveMaintMsg()">💾 حفظ الرسالة</button>
+      </div>
+
+      <div class="adm-card">
+        <div class="adm-card-head">
+          <span class="adm-card-ic">👁️</span>
+          <div>
+            <div class="adm-card-title">إظهار / إخفاء أقسام الموقع</div>
+            <div class="adm-card-sub">قفل أي قسم مؤقتاً من غير ما تحذف بياناته — بيختفي بس من عند الزوار</div>
+          </div>
+        </div>
+        <div id="sectionsToggleList"></div>
+      </div>
+    </div>
+
+    <button class="mbtn-ghost ripple" style="margin-top:14px" onclick="adminLogout()" data-t="adm_out">تسجيل خروج</button>
+  </div>
+</div></div>
+
+<div class="modal" id="reviewModal"><div class="modal-card">
+  <div class="modal-head"><button class="modal-close" onclick="closeModal('reviewModal')">✕</button><h3 data-t="rev_add_h">⭐ أضف تقييمك</h3></div>
+  <p style="font-size:14px;color:var(--txt2);margin-bottom:16px;line-height:1.7" data-t="rev_encourage">رأيك بيفرق! كلمتين منك بتساعد ناس تانية تقرر وبتفرحنا جداً 🙏</p>
+  <div class="field"><label data-t="rev_name">اسمك</label><input id="rev_name" placeholder="محمد أحمد" oninput="validateName(this)"></div>
+  <div class="field"><label data-t="rev_occasion">المناسبة</label><input id="rev_occasion" placeholder="عيد ميلاد / حب / خطوبة"></div>
+  <div class="field"><label data-t="rev_text">تجربتك معانا</label><textarea id="rev_text" placeholder="احكيلنا عن تجربتك..."></textarea></div>
+  <div class="field"><label data-t="rev_stars">تقييمك</label><div class="star-picker" id="starPicker"></div></div>
+  <div class="field">
+    <label>صورة من تجربتك (اختياري)</label>
+    <div class="img-upload-area" onclick="document.getElementById('revImgInput').click()" style="padding:12px">
+      <div class="img-upload-icon">📷</div>
+      <div class="img-upload-text" id="revImgLabel">أرفق صورة (اختياري)</div>
+    </div>
+    <input type="file" id="revImgInput" accept="image/*" style="display:none" onchange="handleRevImgUpload(this)">
+    <img id="revImgPreview" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:140px;object-fit:contain">
+  </div>
+  <button class="mbtn ripple" onclick="submitReview()" data-t="rev_submit">إرسال التقييم</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<div id="confettiWrap"></div>
+<div id="socialProof" class="social-proof"></div>
+<script src="script.js"></script>
+</body>
+</html>
