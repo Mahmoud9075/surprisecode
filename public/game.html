@@ -47,7 +47,11 @@ body{background:#0d1f15;color:#ece3d8;font-family:'Tajawal',sans-serif;overflow:
 .hud-center{text-align:center}
 .hud-stage-label{font-size:11px;color:#b89968;letter-spacing:2px;text-transform:uppercase}
 .hud-stage-num{font-family:'Bodoni Moda',serif;font-size:22px;color:#fff;font-weight:700;line-height:1}
-.hud-lives{display:flex;gap:4px;justify-content:flex-end;min-width:80px}
+.sound-toggle{position:fixed;top:64px;left:14px;z-index:21;width:34px;height:34px;border-radius:50%;background:rgba(13,31,21,.55);border:1px solid rgba(184,153,104,.4);color:#ecdfc8;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(3px)}
+.milestone-banner{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:60;text-align:center;pointer-events:none;animation:milestonePop 2.4s ease forwards}
+.milestone-banner .mb-emoji{font-size:52px;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+.milestone-banner .mb-text{font-family:'Bodoni Moda',serif;font-size:26px;font-weight:800;color:#ffd700;margin-top:6px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+@keyframes milestonePop{0%{opacity:0;transform:translate(-50%,-40%) scale(.7)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-55%) scale(1)}}
 .life{font-size:18px;transition:.3s}
 .life.lost{opacity:.2;transform:scale(.6)}
 
@@ -149,6 +153,7 @@ body{background:#0d1f15;color:#ece3d8;font-family:'Tajawal',sans-serif;overflow:
 <!-- Game Screen -->
 <div class="screen hidden" id="gameScreen">
   <canvas id="gameCanvas"></canvas>
+  <button class="sound-toggle" id="soundToggleBtn" onclick="toggleSound()" title="تشغيل/كتم التشجيع الصوتي">🔊</button>
   <div class="hud">
     <div class="hud-score" id="hudScore">0</div>
     <div class="hud-center">
@@ -202,6 +207,15 @@ var CFG = {
   baseKnives:7, baseSpeed:0.7,
   coupon10:5000, coupon30:15000, coupon50:30000
 };
+var API=''; // نفس نمط script.js — فاضي يعني نفس الدومين
+
+// بيانات بتيجي من زوار تانيين لازم تتنضف قبل ما تتحط في الصفحة (زي أسماء اللاعبين في اللوحة)
+function escapeHtml(str){
+  if(str===null||str===undefined) return '';
+  return String(str).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
 
 // ── State ──
 var playerName='', score=0, stage=1, lives=3;
@@ -240,10 +254,17 @@ function loadData(){
   try{
     var d=JSON.parse(localStorage.getItem('sc_game')||'{}');
     playerName=d.name||'';myBest=d.best||0;myBestStage=d.bestStage||1;
-    leaderboard=JSON.parse(localStorage.getItem('sc_lb')||'[]');
   }catch(e){}
   if(playerName)document.getElementById('nameInput').value=playerName;
-  renderLBPreview();
+  updateSoundBtn();
+  fetchLeaderboard();
+}
+function fetchLeaderboard(){
+  fetch(API+'/api/leaderboard').then(function(r){return r.json();}).then(function(data){
+    leaderboard = Array.isArray(data) ? data : [];
+    renderLBPreview();
+    renderLBFull();
+  }).catch(function(){ /* لو فشل الاتصال، سيب اللوحة زي ما هي */ });
 }
 function saveData(){
   localStorage.setItem('sc_game',JSON.stringify({name:playerName,best:myBest,bestStage:myBestStage}));
@@ -254,7 +275,10 @@ function saveScore(){
   else leaderboard.push({name:playerName,score:score,stage:stage});
   leaderboard.sort(function(a,b){return b.score-a.score;});
   leaderboard=leaderboard.slice(0,100);
-  localStorage.setItem('sc_lb',JSON.stringify(leaderboard));
+  fetch(API+'/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:playerName,score:score,stage:stage})})
+    .then(function(r){return r.json();})
+    .then(function(data){ if(data && data.leaderboard){ leaderboard = data.leaderboard; renderLBPreview(); renderLBFull(); } })
+    .catch(function(){});
 }
 
 // ── Screens ──
@@ -263,13 +287,11 @@ function showScreen(id){
   document.getElementById(id).classList.remove('hidden');
   if(id==='nameScreen')renderLBPreview();
   if(id==='lbScreen')renderLBFull();
-  // Show/hide cursor
   var cur=document.getElementById('gameCursor');
   if(id==='gameScreen'&&!IS_TOUCH){cur.style.display='block';}
   else{cur.style.display='none';}
 }
 
-// ── Mouse tracking for cursor ──
 document.addEventListener('mousemove',function(e){
   mouseX=e.clientX;mouseY=e.clientY;
   var cur=document.getElementById('gameCursor');
@@ -313,12 +335,10 @@ function initStage(){
   disk.knives=[];
   disk.fruits=[];
 
-  // Existing knives on disk
   var existing=Math.min(1+Math.floor(stage/2),7);
   for(var i=0;i<existing;i++){
     disk.knives.push({angle:(Math.PI*2/existing)*i});
   }
-  // Fruit
   if(Math.random()<0.65) disk.fruits.push({angle:Math.random()*Math.PI*2,collected:false});
 
   knivesTotal=CFG.baseKnives+Math.floor(stage/2.5);
@@ -400,7 +420,6 @@ function update(){
     }
   }
 
-  // Fruit collision
   for(var fi=0;fi<disk.fruits.length;fi++){
     var fr=disk.fruits[fi];
     if(fr.collected)continue;
@@ -427,7 +446,6 @@ function render(){
   bg.addColorStop(0,'#1a2f1f');bg.addColorStop(1,'#0d1f15');
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
 
-  // Draw trails
   for(var ti=0;ti<flying.length;ti++){
     var k=flying[ti];
     for(var tr=0;tr<k.trail.length;tr++){
@@ -444,7 +462,6 @@ function render(){
 
   if(bossMode){ctx.shadowBlur=30;ctx.shadowColor='#e05';}
 
-  // Disk rings
   var rings=5;
   for(var r=rings;r>=1;r--){
     var ratio=r/rings;
@@ -459,7 +476,6 @@ function render(){
   ctx.beginPath();ctx.arc(0,0,disk.r,0,Math.PI*2);
   ctx.strokeStyle=bossMode?'#e05':'#b89968';ctx.lineWidth=bossMode?4:2.5;ctx.stroke();
 
-  // Fruits
   for(var fi2=0;fi2<disk.fruits.length;fi2++){
     var fr2=disk.fruits[fi2];
     if(fr2.collected)continue;
@@ -469,7 +485,6 @@ function render(){
     ctx.fillText('🍎',0,0);ctx.shadowBlur=0;ctx.restore();
   }
 
-  // Knives on disk
   for(var ki=0;ki<disk.knives.length;ki++){
     var dk=disk.knives[ki];
     ctx.save();ctx.rotate(dk.angle);ctx.translate(0,-disk.r);
@@ -478,17 +493,14 @@ function render(){
   }
   ctx.restore();
 
-  // Flying knives (from bottom center going up)
   for(var fki=0;fki<flying.length;fki++){
     var fk2=flying[fki];
     ctx.save();ctx.translate(fk2.x,fk2.y);
-    // Knife points UP (toward disk)
-    ctx.rotate(Math.PI); // blade points up
+    ctx.rotate(Math.PI);
     drawKnifeShape(ctx,'#cdb084',52);
     ctx.restore();
   }
 
-  // Aiming line (desktop only)
   if(!IS_TOUCH && gameRunning && knivesThrown < knivesTotal){
     ctx.save();
     ctx.setLineDash([6,10]);
@@ -504,7 +516,6 @@ function render(){
 }
 
 function drawKnifeShape(ctx,color,len){
-  // Blade (points upward in local coords → negative Y)
   ctx.beginPath();
   ctx.moveTo(0,0);
   ctx.lineTo(-4,-(len*.5));
@@ -513,15 +524,12 @@ function drawKnifeShape(ctx,color,len){
   ctx.closePath();
   ctx.fillStyle=color;
   ctx.shadowBlur=8;ctx.shadowColor=color;ctx.fill();ctx.shadowBlur=0;
-  // Handle (below blade)
   ctx.beginPath();
   if(ctx.roundRect){ctx.roundRect(-5,2,10,20,3);}
   else{ctx.rect(-5,2,10,20);}
   ctx.fillStyle=bossMode?'#6b1a1a':'#3d2810';ctx.fill();
-  // Cross guard
   ctx.beginPath();ctx.rect(-8,-1,16,4);
   ctx.fillStyle=bossMode?'#8b2020':'#5c3a1e';ctx.fill();
-  // Gem
   ctx.beginPath();ctx.arc(0,12,3.5,0,Math.PI*2);
   ctx.fillStyle=bossMode?'#e05':'#b89968';ctx.fill();
 }
@@ -529,7 +537,6 @@ function drawKnifeShape(ctx,color,len){
 // ── Throw ──
 function throwKnife(){
   if(!gameRunning||knivesThrown>=knivesTotal)return;
-  // Always throw from bottom center straight up
   flying.push({x:W/2, y:H-90, speed:22, trail:[]});
   navigator.vibrate&&navigator.vibrate(15);
 }
@@ -551,6 +558,61 @@ document.addEventListener('keydown',function(e){
   if((e.code==='Space'||e.key===' ')&&gameRunning){e.preventDefault();throwKnife();}
 });
 
+// ── تشجيع صوتي بعد كل 4 مستويات ──
+var soundOn = localStorage.getItem('sc_sound') !== 'off';
+var _arVoice = null, _lastLineIdx = -1;
+var ENCOURAGE_LINES = [
+  'عاش يا بطل! كمّل كده!',
+  'إيه الحلاوة دي! تحفة!',
+  'وحش والله! ماشي زي الصاروخ!',
+  'معلم يا نجم! استمر!',
+  'برافو عليك! إنت أسطورة!',
+  'جامد أوي كده! يلا كمّل!',
+  'تسلم إيدك! رهيب!',
+  'فنان! مفيش زيك!'
+];
+function updateSoundBtn(){
+  var b = document.getElementById('soundToggleBtn');
+  if(b) b.textContent = soundOn ? '🔊' : '🔇';
+}
+function toggleSound(){
+  soundOn = !soundOn;
+  localStorage.setItem('sc_sound', soundOn ? 'on' : 'off');
+  updateSoundBtn();
+  if(!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+}
+function pickArabicVoice(){
+  if(!('speechSynthesis' in window)) return null;
+  var voices = speechSynthesis.getVoices() || [];
+  return voices.find(function(v){return /^ar/i.test(v.lang);}) || null;
+}
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = function(){ _arVoice = pickArabicVoice(); };
+  _arVoice = pickArabicVoice();
+}
+function speakEncouragement(){
+  if(!soundOn || !('speechSynthesis' in window)) return;
+  var idx;
+  do { idx = Math.floor(Math.random()*ENCOURAGE_LINES.length); } while(idx===_lastLineIdx && ENCOURAGE_LINES.length>1);
+  _lastLineIdx = idx;
+  try{
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(ENCOURAGE_LINES[idx]);
+    u.lang = 'ar-EG';
+    if(_arVoice) u.voice = _arVoice;
+    u.rate = 1.02; u.pitch = 1.05;
+    speechSynthesis.speak(u);
+  }catch(e){}
+  return ENCOURAGE_LINES[idx];
+}
+function showMilestoneBanner(stageNum){
+  var el = document.createElement('div');
+  el.className = 'milestone-banner';
+  el.innerHTML = '<div class="mb-emoji">🎉🏆🎉</div><div class="mb-text">وصلت للمستوى '+stageNum+'!</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.remove(); }, 2400);
+}
+
 // ── Stage Clear ──
 function stageClear(){
   if(!gameRunning)return;
@@ -558,6 +620,13 @@ function stageClear(){
   addScore(CFG.stageClear+(bossMode?CFG.bossScore:0));
   showMsg(bossMode?'⚔️ Boss هُزم! +'+CFG.bossScore:'🎉 المستوى اكتمل!','#ffd700');
   launchConfetti();
+  if(stage % 4 === 0){
+    setTimeout(function(){
+      showMilestoneBanner(stage);
+      speakEncouragement();
+      launchConfetti();
+    }, 350);
+  }
   setTimeout(function(){stage++;initStage();},2000);
 }
 
@@ -565,7 +634,6 @@ function stageClear(){
 function loseLife(){
   lives--;updateHUD();
   navigator.vibrate&&navigator.vibrate([60,30,60]);
-  // Flash screen red
   var flash=document.createElement('div');
   flash.style.cssText='position:fixed;inset:0;background:rgba(224,0,85,.18);z-index:999;pointer-events:none;animation:msgPop .4s ease forwards';
   document.body.appendChild(flash);
@@ -608,7 +676,7 @@ function renderLBPreview(){
   if(!top.length){el.innerHTML='<div style="color:rgba(236,227,216,.3);font-size:12px;text-align:center;padding:8px">كن الأول! 🏆</div>';return;}
   el.innerHTML=top.map(function(p,i){
     return '<div class="lb-item"><div class="lb-rank '+(i===0?'r1':i===1?'r2':'r3')+'">'+(i===0?'🥇':i===1?'🥈':'🥉')+'</div>'
-      +'<span class="lb-name">'+p.name+'</span><span class="lb-score">'+p.score.toLocaleString()+'</span></div>';
+      +'<span class="lb-name">'+escapeHtml(p.name)+'</span><span class="lb-score">'+p.score.toLocaleString()+'</span></div>';
   }).join('');
 }
 
@@ -619,7 +687,7 @@ function renderLBFull(){
     var isMe=p.name===playerName;
     var badge=p.score>=CFG.coupon50?'<span class="lb-badge bl">أسطورة</span>':p.score>=CFG.coupon30?'<span class="lb-badge bp">محترف</span>':p.score>=CFG.coupon10?'<span class="lb-badge bv">VIP</span>':'';
     return '<div class="lb-item'+(isMe?' me':'')+'"><div class="lb-rank '+(i<3?'r'+(i+1):'rn')+'">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1))+'</div>'
-      +'<div style="flex:1"><div class="lb-name">'+badge+p.name+(isMe?' 👈':'')+'</div><div class="lb-lvl">مستوى '+p.stage+'</div></div>'
+      +'<div style="flex:1"><div class="lb-name">'+badge+escapeHtml(p.name)+(isMe?' 👈':'')+'</div><div class="lb-lvl">مستوى '+p.stage+'</div></div>'
       +'<span class="lb-score">'+p.score.toLocaleString()+'</span></div>';
   }).join('');
 }
