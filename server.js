@@ -88,7 +88,7 @@ app.use(async (req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;
     const db = (await readDB());
     if ((db.blockedIPs||[]).includes(ip)) return res.status(403).json({ ok:false, msg:'محظور' });
-    if (db.maintenanceMode && !req.path.startsWith('/api/admin') && req.path !== '/') {
+    if (db.maintenanceMode && !req.path.startsWith('/api/admin')) {
       if (req.path.endsWith('.html') || req.path === '/') {
         return res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>صيانة</title>
         <style>body{background:#1e2620;color:#ece3d8;font-family:Tajawal,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
@@ -410,6 +410,34 @@ app.post('/api/reviews', async (req, res) => {
 });
 
 app.get('/api/reviews', async (req, res) => res.json((await readDB()).reviews || []));
+
+// ── Game Leaderboard (مشتركة بين كل الزوار — بدل localStorage اللي كانت بتفضل عند كل واحد لوحده) ──
+app.get('/api/leaderboard', async (req, res) => {
+  const db = (await readDB());
+  res.json((db.leaderboard || []).slice(0, 100));
+});
+app.post('/api/leaderboard', async (req, res) => {
+  let { name, score, stage } = req.body || {};
+  name = String(name || '').trim().slice(0, 20);
+  score = Number(score);
+  stage = Number(stage);
+  // تحقق بسيط من صحة الأرقام عشان محدش يبعت قيم غريبة يخرب بيها اللوحة
+  if (!name || !Number.isFinite(score) || score < 0 || score > 5_000_000 || !Number.isFinite(stage) || stage < 1 || stage > 999) {
+    return res.status(400).json({ ok:false, msg:'بيانات غير صالحة' });
+  }
+  const db = (await readDB());
+  if (!db.leaderboard) db.leaderboard = [];
+  const idx = db.leaderboard.findIndex(p => p.name === name);
+  if (idx >= 0) {
+    if (score > db.leaderboard[idx].score) { db.leaderboard[idx].score = score; db.leaderboard[idx].stage = stage; }
+  } else {
+    db.leaderboard.push({ name, score, stage });
+  }
+  db.leaderboard.sort((a, b) => b.score - a.score);
+  db.leaderboard = db.leaderboard.slice(0, 100);
+  await writeDB(db);
+  res.json({ ok:true, leaderboard: db.leaderboard });
+});
 
 app.delete('/api/admin/reviews/:id', auth, requirePermission('reviews'), async (req, res) => {
   const db = (await readDB());
@@ -792,9 +820,7 @@ app.use((err, req, res, next) => {
   }
 });
 
-// على Vercel، الملف ده بيتحمّل كـ Serverless Function مش سيرفر شغال باستمرار —
-// فمفيش داعي لـ app.listen هناك (Vercel نفسه بيستقبل الطلبات ويوجهها للـ app).
-// محليًا (أو على Render/Railway وأي سيرفر عادي) لازم نستخدم app.listen عشان يشتغل فعليًا.
+
 if (!process.env.VERCEL) {
   app.listen(PORT, () => console.log(`✅ SurpriseCode v9 running on http://localhost:${PORT}`));
 }
