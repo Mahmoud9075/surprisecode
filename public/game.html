@@ -519,14 +519,26 @@ function render(){
 }
 
 function drawKnifeShape(ctx,color,len){
+  var bl=len*0.62; // طول النصل
+  // النصل: شكل مثلث رفيع بيضيق لسن حاد (بدل الشكل المعين العريض القديم)
   ctx.beginPath();
-  ctx.moveTo(0,0);
-  ctx.lineTo(-4,-(len*.5));
-  ctx.lineTo(0,-len);
-  ctx.lineTo(4,-(len*.5));
+  ctx.moveTo(0,-bl);
+  ctx.lineTo(3,-bl*0.22);
+  ctx.lineTo(1.6,0);
+  ctx.lineTo(-1.6,0);
+  ctx.lineTo(-3,-bl*0.22);
   ctx.closePath();
   ctx.fillStyle=color;
-  ctx.shadowBlur=8;ctx.shadowColor=color;ctx.fill();ctx.shadowBlur=0;
+  ctx.shadowBlur=6;ctx.shadowColor=color;
+  ctx.fill();
+  ctx.shadowBlur=0;
+  // خط لمعان رفيع في نص النصل يدّيه إحساس معدني بدل السطح الأملس
+  ctx.beginPath();
+  ctx.moveTo(0,-bl+3);
+  ctx.lineTo(0,-2);
+  ctx.strokeStyle='rgba(255,255,255,.5)';
+  ctx.lineWidth=0.8;
+  ctx.stroke();
   ctx.beginPath();
   if(ctx.roundRect){ctx.roundRect(-5,2,10,20,3);}
   else{ctx.rect(-5,2,10,20);}
