@@ -529,9 +529,7 @@ function drawKnifeShape(ctx,color,len){
   ctx.lineTo(-3,-bl*0.22);
   ctx.closePath();
   ctx.fillStyle=color;
-  ctx.shadowBlur=6;ctx.shadowColor=color;
   ctx.fill();
-  ctx.shadowBlur=0;
   // خط لمعان رفيع في نص النصل يدّيه إحساس معدني بدل السطح الأملس
   ctx.beginPath();
   ctx.moveTo(0,-bl+3);
