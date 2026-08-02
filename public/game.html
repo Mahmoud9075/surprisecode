@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -220,10 +218,10 @@ function escapeHtml(str){
 }
 
 // ── State ──
-var playerName='', score=0, stage=1, lives=3;
+var playerName='', playerId='', score=0, stage=1, lives=3;
 var knivesTotal=0, knivesThrown=0;
 var gameRunning=false, bossMode=false;
-var leaderboard=[];
+var leaderboard=[], leaderboardLoaded=false;
 var myBest=0, myBestStage=1;
 var animFrameId=null;
 
@@ -255,8 +253,11 @@ var flying=[];
 function loadData(){
   try{
     var d=JSON.parse(localStorage.getItem('sc_game')||'{}');
-    playerName=d.name||'';myBest=d.best||0;myBestStage=d.bestStage||1;
+    playerName=d.name||'';myBest=d.best||0;myBestStage=d.bestStage||1;playerId=d.id||'';
   }catch(e){}
+  if(!playerId){
+    playerId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('p_'+Date.now()+'_'+Math.random().toString(36).slice(2));
+  }
   if(playerName)document.getElementById('nameInput').value=playerName;
   updateSoundBtn();
   fetchLeaderboard();
@@ -264,20 +265,21 @@ function loadData(){
 function fetchLeaderboard(){
   fetch(API+'/api/leaderboard').then(function(r){return r.json();}).then(function(data){
     leaderboard = Array.isArray(data) ? data : [];
+    leaderboardLoaded = true;
     renderLBPreview();
     renderLBFull();
-  }).catch(function(){ /* لو فشل الاتصال، سيب اللوحة زي ما هي */ });
+  }).catch(function(){ leaderboardLoaded = true; renderLBFull(); /* لو فشل الاتصال، اعرض إن مفيش بيانات بدل التحميل الدائم */ });
 }
 function saveData(){
-  localStorage.setItem('sc_game',JSON.stringify({name:playerName,best:myBest,bestStage:myBestStage}));
+  localStorage.setItem('sc_game',JSON.stringify({name:playerName,best:myBest,bestStage:myBestStage,id:playerId}));
 }
 function saveScore(){
-  var idx=leaderboard.findIndex(function(p){return p.name===playerName;});
+  var idx=leaderboard.findIndex(function(p){return p.id===playerId || (!p.id && p.name===playerName);});
   if(idx>=0){if(score>leaderboard[idx].score){leaderboard[idx].score=score;leaderboard[idx].stage=stage;}}
-  else leaderboard.push({name:playerName,score:score,stage:stage});
+  else leaderboard.push({id:playerId,name:playerName,score:score,stage:stage});
   leaderboard.sort(function(a,b){return b.score-a.score;});
   leaderboard=leaderboard.slice(0,100);
-  fetch(API+'/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:playerName,score:score,stage:stage})})
+  fetch(API+'/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:playerId,name:playerName,score:score,stage:stage})})
     .then(function(r){return r.json();})
     .then(function(data){ if(data && data.leaderboard){ leaderboard = data.leaderboard; renderLBPreview(); renderLBFull(); } })
     .catch(function(){});
@@ -689,9 +691,10 @@ function renderLBPreview(){
 
 function renderLBFull(){
   var el=document.getElementById('lbFull');if(!el)return;
+  if(!leaderboardLoaded){el.innerHTML='<div style="text-align:center;color:rgba(236,227,216,.35);padding:40px">⏳ بيتحمّل...</div>';return;}
   if(!leaderboard.length){el.innerHTML='<div style="text-align:center;color:rgba(236,227,216,.3);padding:40px">لسه مفيش لاعبين</div>';return;}
-  el.innerHTML=leaderboard.slice(0,50).map(function(p,i){
-    var isMe=p.name===playerName;
+  el.innerHTML=leaderboard.slice(0,10).map(function(p,i){
+    var isMe=(p.id && playerId) ? p.id===playerId : p.name===playerName;
     var badge=p.score>=CFG.coupon50?'<span class="lb-badge bl">أسطورة</span>':p.score>=CFG.coupon30?'<span class="lb-badge bp">محترف</span>':p.score>=CFG.coupon10?'<span class="lb-badge bv">VIP</span>':'';
     return '<div class="lb-item'+(isMe?' me':'')+'"><div class="lb-rank '+(i<3?'r'+(i+1):'rn')+'">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1))+'</div>'
       +'<div style="flex:1"><div class="lb-name">'+badge+escapeHtml(p.name)+(isMe?' 👈':'')+'</div><div class="lb-lvl">مستوى '+p.stage+'</div></div>'
@@ -773,4 +776,3 @@ loadData();
 </script>
 </body>
 </html>
-```
