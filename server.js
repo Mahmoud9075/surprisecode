@@ -12,6 +12,9 @@ const rateLimit    = require('express-rate-limit');
 const { readDB, writeDB, listBackups, restoreBackup, getOtp, setOtp, deleteOtp } = require('./db');
 
 const app  = express();
+// السيرفر بيشتغل وراء بروكسي (فيرسل أو أي منصة استضافة) — من غيرها req.ip هيرجع IP
+// البروكسي مش IP الزائر الحقيقي، وده بيبوّظ: الـ Rate Limiting، حظر الـ IP، وسجل الدخول
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 8080;
 
 // ── Session Secret (لتوقيع التوكنات) ───────────────────────────────────────────
