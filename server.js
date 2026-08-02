@@ -133,12 +133,18 @@ app.get('/project-details.html', async (req, res, next) => {
 
 // ── Static Files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: 0,
   setHeaders: (res, filePath) => {
-    // منع المتصفح من تخزين نسخة قديمة من الموقع — كل تعديل هيظهر فوراً
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    if (/\.html$/i.test(filePath)) {
+      // صفحات الـ HTML بس هي اللي بنمنع تخزينها، عشان أي تعديل تعمله يظهر فوراً
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    } else {
+      // الصور/CSS/JS تتخزن في المتصفح ليوم كامل — ده اللي كان بيخلي الموقع يتحمّل من
+      // الأول في كل صفحة (حتى صورة اللوجو كانت بتتنزل تاني في كل مرة). لو عدّلت ملف
+      // وعايز يظهر فوراً من غير استنى، غيّر اسمه (زي style.css?v=2).
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
   }
 }));
 
