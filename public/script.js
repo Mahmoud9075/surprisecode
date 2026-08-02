@@ -1423,11 +1423,15 @@ function payWithPaymob(){
     if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
     var box=document.getElementById('coPaymentMethods');
     if(box){
-      var note=document.createElement('div');
-      note.style.cssText='margin-top:10px;padding:12px;border-radius:10px;background:rgba(184,153,104,.12);color:var(--txt2);font-size:13px;text-align:center;line-height:1.8';
+      var note=document.getElementById('paymobPendingNote');
+      if(!note){
+        note=document.createElement('div');
+        note.id='paymobPendingNote';
+        note.style.cssText='margin-top:10px;padding:12px;border-radius:10px;background:rgba(184,153,104,.12);color:var(--txt2);font-size:13px;text-align:center;line-height:1.8';
+        box.appendChild(note);
+      }
       note.innerHTML='اتفتحتلك صفحة الدفع في تاب جديد — استكمل دفع مبلغ <b style="color:var(--gold)">'+tot+' ج.م</b> هناك.<br>لسه طلبك مش هيبقى مؤكد لحد ما تدفع فعلاً، وبعد الدفع هنراجع الإيصال ونأكدلك على واتساب.'
         + (orderNum ? '<br>رقم الطلب للمتابعة: <b>#'+orderNum+'</b>' : '');
-      box.appendChild(note);
     }
   }
 
