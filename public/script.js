@@ -1415,23 +1415,29 @@ function payWithPaymob(){
   if(btn){btn.textContent='⏳ جاري التحويل...';btn.disabled=true;}
   var tot=cart.reduce(function(acc,p){return acc+p.price;},0);
 
-  function goToPaymob(orderNum){
+  // ملحوظة: فتح صفحة الدفع في تاب جديد مايعنيش إن الدفع خلص —
+  // العميل لسه محتاج يكمل ويدفع هناك بنفسه. فمبنقفلش السلة ولا بنودّيه لصفحة "تم الطلب"
+  // إلا لو هو رجع وأكد إنه دفع فعلاً، عشان محدش يشوف "تم بنجاح" وهو أصلاً ما دفعش.
+  function afterOrderLogged(orderNum){
     window.open(PAYMOB_LINK, '_blank');
-    toast(lang==='ar'?'اتأكد إنك كتبت مبلغ '+tot+' ج.م ظابط في صفحة الدفع':'Make sure the amount entered matches '+tot+' EGP');
-    cart=[];updateCart();save();
-    setTimeout(function(){
-      window.location.href = '/thank-you.html' + (orderNum ? ('?order='+orderNum) : '');
-    }, 800);
     if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
+    var box=document.getElementById('coPaymentMethods');
+    if(box){
+      var note=document.createElement('div');
+      note.style.cssText='margin-top:10px;padding:12px;border-radius:10px;background:rgba(184,153,104,.12);color:var(--txt2);font-size:13px;text-align:center;line-height:1.8';
+      note.innerHTML='اتفتحتلك صفحة الدفع في تاب جديد — استكمل دفع مبلغ <b style="color:var(--gold)">'+tot+' ج.م</b> هناك.<br>لسه طلبك مش هيبقى مؤكد لحد ما تدفع فعلاً، وبعد الدفع هنراجع الإيصال ونأكدلك على واتساب.'
+        + (orderNum ? '<br>رقم الطلب للمتابعة: <b>#'+orderNum+'</b>' : '');
+      box.appendChild(note);
+    }
   }
 
   fetch(API+'/api/orders',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name:name,phone:phone,items:cart.map(function(p){return p[lang].n;}),itemIds:cart.map(function(p){return p.id;}),total:tot,note:'دفع بالفيزا (Paymob link)'})
+    body:JSON.stringify({name:name,phone:phone,items:cart.map(function(p){return p[lang].n;}),itemIds:cart.map(function(p){return p.id;}),total:tot,note:'دفع بالفيزا (Paymob link) - لسه محتاج تأكيد الدفع'})
   }).then(function(r){return r.json();})
-  .then(function(data){ goToPaymob(data&&data.orderNum); })
-  .catch(function(){ goToPaymob(null); });
+  .then(function(data){ afterOrderLogged(data&&data.orderNum); })
+  .catch(function(){ afterOrderLogged(null); });
 }
 
 // ── Sections Visibility ──
