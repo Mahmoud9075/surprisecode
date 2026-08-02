@@ -675,12 +675,15 @@ function loadPaymentMethods(){
 function renderPaymentMethods(){
   var wrap=document.getElementById('coPaymentMethods'); if(!wrap||!window._pmData) return;
   var pm=window._pmData;
+  if(currentPaymentMethod==='card'&&!(pm.card&&pm.card.active)){
+    currentPaymentMethod = (pm.vodafoneCash&&pm.vodafoneCash.active) ? 'vodafone' : ((pm.instapay&&pm.instapay.active) ? 'instapay' : 'vodafone');
+  }
   var tabs='<div style="display:flex;gap:6px;margin-bottom:10px">';
   if(pm.vodafoneCash&&pm.vodafoneCash.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='vodafone'?' active':'')+'" onclick="switchPaymentMethod(\'vodafone\')">📱 فودافون كاش</button>';
   if(pm.instapay&&pm.instapay.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='instapay'?' active':'')+'" onclick="switchPaymentMethod(\'instapay\')">🏦 إنستاباي</button>';
-  tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' active':'')+'" onclick="switchPaymentMethod(\'card\')">💳 فيزا / كارت</button>';
+  if(pm.card&&pm.card.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' active':'')+'" onclick="switchPaymentMethod(\'card\')">💳 فيزا / كارت</button>';
   tabs+='</div>';
-  tabs+='<div class="secure-pay-badge">🔒 مدفوعات آمنة عبر Paymob</div>';
+  if(pm.card&&pm.card.active) tabs+='<div class="secure-pay-badge">🔒 مدفوعات آمنة عبر Paymob</div>';
 
   var box='';
   if(currentPaymentMethod==='vodafone'){
