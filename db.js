@@ -94,22 +94,37 @@ function buildDefaultData() {
     };
 }
 
+// كاش بسيط في الذاكرة لثواني قليلة — عشان مش كل request (حتى صفحة عادية) يعمل رحلة كاملة
+// لقاعدة البيانات ويجيب كل البيانات (كل المشاريع + الطلبات + سجل الزيارات...) من الصفر.
+// ده اللي كان بيخلي الموقع يحس إنه بطيء وبيعلق، خصوصاً مع زيادة عدد الزيارات/الطلبات بمرور الوقت.
+let _cache = null;
+let _cacheTime = 0;
+const CACHE_TTL_MS = 3000;
+
 async function readDB() {
+  const now = Date.now();
+  if (_cache && (now - _cacheTime) < CACHE_TTL_MS) return _cache;
   await ensureTables();
   const rows = await sql`SELECT data FROM app_state WHERE id = 1`;
+  let data;
   if (!rows.length) {
-    const def = buildDefaultData();
-    await sql`INSERT INTO app_state (id, data) VALUES (1, ${JSON.stringify(def)}::jsonb)
+    data = buildDefaultData();
+    await sql`INSERT INTO app_state (id, data) VALUES (1, ${JSON.stringify(data)}::jsonb)
               ON CONFLICT (id) DO NOTHING`;
-    return def;
+  } else {
+    data = rows[0].data;
   }
-  return rows[0].data;
+  _cache = data;
+  _cacheTime = now;
+  return data;
 }
 
 async function writeDB(data) {
   await ensureTables();
   await sql`INSERT INTO app_state (id, data, updated_at) VALUES (1, ${JSON.stringify(data)}::jsonb, now())
             ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`;
+  _cache = data;
+  _cacheTime = Date.now();
   // نسخة احتياطية يومية (upsert بتاريخ اليوم) — بتحل محل الـ setInterval القديم
   // اللي مكانش هيشتغل على سيرفرات serverless مالهاش عملية شغالة باستمرار
   const today = new Date().toISOString().split('T')[0];
