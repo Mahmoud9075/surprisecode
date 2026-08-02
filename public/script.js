@@ -13,6 +13,7 @@ function safeImgSrc(src){
 // ── Config ──
 var API='', lang='ar', theme='light', cart=[];
 var WA='201023514568', adminToken=localStorage.getItem('sc_admin_token')||null, reviewStars=5;
+var PAYMOB_LINK='https://accept.paymob.com/payme/surpisecode'; // رابط الدفع الثابت بتاعك على Paymob
 var currentRevPage=0, reviews=[], projects=[];
 var IS_MOBILE = /Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 
@@ -675,15 +676,12 @@ function loadPaymentMethods(){
 function renderPaymentMethods(){
   var wrap=document.getElementById('coPaymentMethods'); if(!wrap||!window._pmData) return;
   var pm=window._pmData;
-  if(currentPaymentMethod==='card'&&!(pm.card&&pm.card.active)){
-    currentPaymentMethod = (pm.vodafoneCash&&pm.vodafoneCash.active) ? 'vodafone' : ((pm.instapay&&pm.instapay.active) ? 'instapay' : 'vodafone');
-  }
   var tabs='<div style="display:flex;gap:6px;margin-bottom:10px">';
   if(pm.vodafoneCash&&pm.vodafoneCash.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='vodafone'?' active':'')+'" onclick="switchPaymentMethod(\'vodafone\')">📱 فودافون كاش</button>';
   if(pm.instapay&&pm.instapay.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='instapay'?' active':'')+'" onclick="switchPaymentMethod(\'instapay\')">🏦 إنستاباي</button>';
-  if(pm.card&&pm.card.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' active':'')+'" onclick="switchPaymentMethod(\'card\')">💳 فيزا / كارت</button>';
+  tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' active':'')+'" onclick="switchPaymentMethod(\'card\')">💳 فيزا / كارت</button>';
   tabs+='</div>';
-  if(pm.card&&pm.card.active) tabs+='<div class="secure-pay-badge">🔒 مدفوعات آمنة عبر Paymob</div>';
+  tabs+='<div class="secure-pay-badge">🔒 مدفوعات آمنة عبر Paymob</div>';
 
   var box='';
   if(currentPaymentMethod==='vodafone'){
@@ -693,8 +691,9 @@ function renderPaymentMethods(){
     box='<div class="pay-box"><span>إنستاباي</span><span style="display:flex;align-items:center;gap:8px"><b>'+window._pmInstapay+'</b>'
       +'<button class="icon-btn" onclick="copyNum()" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span></div>';
   } else if(currentPaymentMethod==='card'){
+    var cardTot=cart.reduce(function(acc,p){return acc+p.price;},0);
     box='<div class="pay-box" style="flex-direction:column;gap:10px;align-items:stretch">'
-      +'<span style="text-align:center;color:var(--txt2);font-size:13px">هيتحسب المبلغ أوتوماتيك من السلة، وهتتحول لصفحة دفع آمنة تدخل بيانات الكارت فيها</span>'
+      +'<span style="text-align:center;color:var(--txt2);font-size:13px">هتتحول لصفحة دفع Paymob الآمنة — الإجمالي المطلوب دفعه: <b style="color:var(--gold)">'+cardTot+' ج.م</b> (تأكد إن نفس المبلغ ده ظاهر في صفحة الدفع قبل ما تكمل)</span>'
       +'<button type="button" class="btn fill ripple" onclick="payWithPaymob()" id="paymobPayBtn">💳 ادفع دلوقتي بالفيزا</button>'
       +'</div>';
   }
@@ -1404,30 +1403,35 @@ function savePaymobConfig(){
     .catch(function(){ toast('❌ حصل خطأ في الحفظ'); });
 }
 
-// ── دفع العميل الفعلي — بيحسب المبلغ من السيرفر نفسه (مش من المتصفح) عشان يبقى دقيق ومينفعش يتغير ──
+// ── دفع العميل بالفيزا عن طريق رابط Paymob الثابت بتاعك (Quick Link) ──
+// ملحوظة مهمة: الرابط ده ثابت ومش بيستقبل مبلغ السلة أوتوماتيك، فبنسجل الطلب عندنا
+// الأول (زي أي طلب واتساب عادي) وبنوضح للعميل المبلغ المطلوب قبل ما يروح يدفع
 function payWithPaymob(){
   var name=document.getElementById('co_name')?document.getElementById('co_name').value.trim():'';
   var phone=document.getElementById('co_phone')?document.getElementById('co_phone').value.trim():'';
   if(!name||!phone){toast(lang==='ar'?'اكتب اسمك ورقمك الأول':'Enter your name and phone first');return;}
   if(!cart.length){toast(lang==='ar'?'السلة فارغة':'Cart is empty');return;}
   var btn=document.getElementById('paymobPayBtn');
-  if(btn){btn.textContent='⏳ جاري التجهيز...';btn.disabled=true;}
-  fetch(API+'/api/payment/paymob/init',{
+  if(btn){btn.textContent='⏳ جاري التحويل...';btn.disabled=true;}
+  var tot=cart.reduce(function(acc,p){return acc+p.price;},0);
+
+  function goToPaymob(orderNum){
+    window.open(PAYMOB_LINK, '_blank');
+    toast(lang==='ar'?'اتأكد إنك كتبت مبلغ '+tot+' ج.م ظابط في صفحة الدفع':'Make sure the amount entered matches '+tot+' EGP');
+    cart=[];updateCart();save();
+    setTimeout(function(){
+      window.location.href = '/thank-you.html' + (orderNum ? ('?order='+orderNum) : '');
+    }, 800);
+    if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
+  }
+
+  fetch(API+'/api/orders',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name:name,phone:phone,items:cart.map(function(p){return {id:p.id, qty:1};})})
+    body:JSON.stringify({name:name,phone:phone,items:cart.map(function(p){return p[lang].n;}),itemIds:cart.map(function(p){return p.id;}),total:tot,note:'دفع بالفيزا (Paymob link)'})
   }).then(function(r){return r.json();})
-  .then(function(data){
-    if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
-    if(data.ok && data.paymentUrl){
-      window.location.href = data.paymentUrl; // المبلغ هيبقى ظاهر جاهز في صفحة Paymob نفسها، مش محتاج العميل يكتبه
-    } else {
-      toast(lang==='ar'?'الدفع بالفيزا مش متاح دلوقتي، جرب فودافون كاش أو إنستاباي':'Card payment unavailable right now, try another method');
-    }
-  }).catch(function(){
-    if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
-    toast(lang==='ar'?'حصل خطأ، جرب تاني':'Something went wrong, try again');
-  });
+  .then(function(data){ goToPaymob(data&&data.orderNum); })
+  .catch(function(){ goToPaymob(null); });
 }
 
 // ── Sections Visibility ──
