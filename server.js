@@ -426,7 +426,8 @@ app.get('/api/leaderboard', async (req, res) => {
   res.json((db.leaderboard || []).slice(0, 100));
 });
 app.post('/api/leaderboard', async (req, res) => {
-  let { name, score, stage } = req.body || {};
+  let { id, name, score, stage } = req.body || {};
+  id = String(id || '').trim().slice(0, 64);
   name = String(name || '').trim().slice(0, 20);
   score = Number(score);
   stage = Number(stage);
@@ -434,13 +435,21 @@ app.post('/api/leaderboard', async (req, res) => {
   if (!name || !Number.isFinite(score) || score < 0 || score > 5_000_000 || !Number.isFinite(stage) || stage < 1 || stage > 999) {
     return res.status(400).json({ ok:false, msg:'بيانات غير صالحة' });
   }
+  // حد منطقي أقصى للنقاط حسب المستوى اللي وصله (مش حماية كاملة من الغش، بس بتوقف
+  // أبسط أشكاله زي حد يبعت رقم ضخم عشوائي من غير ما يكون لعب فعلاً)
+  const maxPlausible = stage * 1500 + 2000;
+  if (score > maxPlausible) {
+    return res.status(400).json({ ok:false, msg:'بيانات غير صالحة' });
+  }
   const db = (await readDB());
   if (!db.leaderboard) db.leaderboard = [];
-  const idx = db.leaderboard.findIndex(p => p.name === name);
+  const idx = id
+    ? db.leaderboard.findIndex(p => p.id === id)
+    : db.leaderboard.findIndex(p => !p.id && p.name === name);
   if (idx >= 0) {
-    if (score > db.leaderboard[idx].score) { db.leaderboard[idx].score = score; db.leaderboard[idx].stage = stage; }
+    if (score > db.leaderboard[idx].score) { db.leaderboard[idx].score = score; db.leaderboard[idx].stage = stage; db.leaderboard[idx].name = name; }
   } else {
-    db.leaderboard.push({ name, score, stage });
+    db.leaderboard.push({ id: id || undefined, name, score, stage });
   }
   db.leaderboard.sort((a, b) => b.score - a.score);
   db.leaderboard = db.leaderboard.slice(0, 100);
