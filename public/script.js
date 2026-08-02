@@ -560,18 +560,20 @@ function submitReview(){
   }
   var rev={name:name,occasion:occasion||'—',text:text,stars:reviewStars,img:window._revImgData||null};
   fetch(API+'/api/reviews',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rev)})
-  .then(function(r){return r.json();})
-  .then(function(){
+  .then(function(r){
+    if(!r.ok) throw new Error('save failed');
+    return r.json();
+  })
+  .then(function(data){
+    if(!data || data.ok===false) throw new Error('save failed');
     reviews.push(rev);
     window._revImgData=null;
     var prev=document.getElementById('revImgPreview');if(prev)prev.style.display='none';
     closeModal('reviewModal');renderReviews();launchConfetti();
     toast(lang==='ar'?'شكراً على تقييمك ⭐':'Thank you ⭐');
   }).catch(function(){
-    reviews.push(rev);
-    window._revImgData=null;
-    closeModal('reviewModal');renderReviews();launchConfetti();
-    toast(lang==='ar'?'شكراً على تقييمك ⭐':'Thank you ⭐');
+    // مبنسكرش المودال ولا بنمسح الصورة هنا — عشان العميل يقدر يجرب يبعت تاني
+    toast(lang==='ar'?'حصل خطأ ومقدرناش نسجل تقييمك، جرب تاني':'Something went wrong, please try again');
   });
 }
 
