@@ -678,10 +678,9 @@ function renderPaymentMethods(){
   var tabs='<div style="display:flex;gap:6px;margin-bottom:10px">';
   if(pm.vodafoneCash&&pm.vodafoneCash.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='vodafone'?' active':'')+'" onclick="switchPaymentMethod(\'vodafone\')">📱 فودافون كاش</button>';
   if(pm.instapay&&pm.instapay.active) tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='instapay'?' active':'')+'" onclick="switchPaymentMethod(\'instapay\')">🏦 إنستاباي</button>';
-tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' active':'')+'" onclick="switchPaymentMethod(\'card\')">💳 فيزا / كارت</button>';
+  tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' active':'')+'" onclick="switchPaymentMethod(\'card\')">💳 فيزا / كارت</button>';
   tabs+='</div>';
   tabs+='<div class="secure-pay-badge">🔒 مدفوعات آمنة عبر Paymob</div>';
-  }
 
   var box='';
   if(currentPaymentMethod==='vodafone'){
@@ -690,7 +689,7 @@ tabs+='<button type="button" class="pm-tab'+(currentPaymentMethod==='card'?' act
   } else if(currentPaymentMethod==='instapay'){
     box='<div class="pay-box"><span>إنستاباي</span><span style="display:flex;align-items:center;gap:8px"><b>'+window._pmInstapay+'</b>'
       +'<button class="icon-btn" onclick="copyNum()" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span></div>';
- } else if(currentPaymentMethod==='card'){
+  } else if(currentPaymentMethod==='card'){
     box='<div class="pay-box" style="flex-direction:column;gap:10px;align-items:stretch">'
       +'<span style="text-align:center;color:var(--txt2);font-size:13px">هتتحول لصفحة دفع آمنة بره الموقع عشان تدخل بيانات الكارت</span>'
       +'<a href="https://accept.paymob.com/payme/surpisecode" target="_blank" class="btn fill ripple" style="text-align:center;text-decoration:none">💳 ادفع دلوقتي بالفيزا</a>'
