@@ -691,8 +691,8 @@ function renderPaymentMethods(){
       +'<button class="icon-btn" onclick="copyNum()" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span></div>';
   } else if(currentPaymentMethod==='card'){
     box='<div class="pay-box" style="flex-direction:column;gap:10px;align-items:stretch">'
-      +'<span style="text-align:center;color:var(--txt2);font-size:13px">هتتحول لصفحة دفع آمنة بره الموقع عشان تدخل بيانات الكارت</span>'
-      +'<a href="https://accept.paymob.com/payme/surpisecode" target="_blank" class="btn fill ripple" style="text-align:center;text-decoration:none">💳 ادفع دلوقتي بالفيزا</a>'
+      +'<span style="text-align:center;color:var(--txt2);font-size:13px">هيتحسب المبلغ أوتوماتيك من السلة، وهتتحول لصفحة دفع آمنة تدخل بيانات الكارت فيها</span>'
+      +'<button type="button" class="btn fill ripple" onclick="payWithPaymob()" id="paymobPayBtn">💳 ادفع دلوقتي بالفيزا</button>'
       +'</div>';
   }
   wrap.innerHTML = tabs + box;
@@ -814,7 +814,7 @@ function showAdmTab(tab,btn){
   if(tab==='reviews')renderAdminRevList();
   if(tab==='orders')loadAdminOrders();
   if(tab==='pricing')loadAdminPlans();
-  if(tab==='settings'){loadMaintenance();loadSectionsToggles();}
+  if(tab==='settings'){loadMaintenance();loadSectionsToggles();loadPaymobConfigUI();}
 }
 // ── OTP Login System ──
 var otpResendTimer=null;
@@ -1351,6 +1351,80 @@ function saveMaintMsg(){
   var msg=document.getElementById('maintMsg');if(!msg)return;
   fetch(API+'/api/admin/maintenance',{method:'PUT',headers:{'Content-Type':'application/json','x-admin-token':adminToken},body:JSON.stringify({msg:msg.value})})
   .then(function(){toast('✅ تم حفظ رسالة الصيانة');});
+}
+
+// ── Paymob Auto-Payment Config (الدفع الأوتوماتيكي بالمبلغ الصحيح) ──
+function loadPaymobConfigUI(){
+  var pane = document.getElementById('admSettings');
+  if(!pane) return;
+  if(!document.getElementById('paymobConfigBox')){
+    var box = document.createElement('div');
+    box.id = 'paymobConfigBox';
+    box.style.cssText = 'margin-top:24px;padding:16px;border:1px solid var(--panel-br);border-radius:12px;background:var(--panel)';
+    box.innerHTML = '<h4 style="margin-bottom:6px;color:var(--gold)">💳 الدفع الأوتوماتيكي بالفيزا (Paymob)</h4>'
+      + '<p style="font-size:12px;color:var(--txt3);margin-bottom:12px;line-height:1.7">لو عبّيت البيانات دي من حسابك على Paymob، هيتحسب المبلغ أوتوماتيك من السلة نفسها، والعميل مش هيحتاج يكتبه بإيده. البيانات دي بتيجي من لوحة Paymob (Accept → Integrations / Developers).</p>'
+      + '<input id="pmb_apiKey" placeholder="API Key" style="width:100%;margin-bottom:8px;padding:9px;border-radius:8px;border:1px solid var(--panel-br);background:var(--bg2);color:var(--txt)">'
+      + '<input id="pmb_integrationId" placeholder="Integration ID" style="width:100%;margin-bottom:8px;padding:9px;border-radius:8px;border:1px solid var(--panel-br);background:var(--bg2);color:var(--txt)">'
+      + '<input id="pmb_publicKey" placeholder="Public Key" style="width:100%;margin-bottom:8px;padding:9px;border-radius:8px;border:1px solid var(--panel-br);background:var(--bg2);color:var(--txt)">'
+      + '<input id="pmb_hmacSecret" placeholder="HMAC Secret (لتأكيد نجاح الدفع)" style="width:100%;margin-bottom:10px;padding:9px;border-radius:8px;border:1px solid var(--panel-br);background:var(--bg2);color:var(--txt)">'
+      + '<label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px"><input type="checkbox" id="pmb_active"> فعّل الدفع الأوتوماتيك بالفيزا للعملاء</label>'
+      + '<div id="pmbStatusBadge" style="font-size:12px;margin-bottom:10px"></div>'
+      + '<button class="edit-btn" onclick="savePaymobConfig()">💾 حفظ إعدادات Paymob</button>';
+    pane.appendChild(box);
+  }
+  fetch(API+'/api/admin/paymob-config',{headers:{'x-admin-token':adminToken}})
+    .then(function(r){return r.json();})
+    .then(function(cfg){
+      var active=document.getElementById('pmb_active'); if(active) active.checked = !!cfg.active;
+      var badge=document.getElementById('pmbStatusBadge');
+      if(badge){
+        badge.innerHTML = cfg.hasApiKey && cfg.hasIntegrationId
+          ? '<span style="color:#25d366">✅ البيانات متسجّلة (متخبّية لأسباب أمان — اكتبها تاني بس لو عايز تغيّرها)</span>'
+          : '<span style="color:#e05">⚠️ لسه ماحطتش بيانات Paymob</span>';
+      }
+    }).catch(function(){});
+}
+function savePaymobConfig(){
+  var body = { active: document.getElementById('pmb_active').checked };
+  var apiKey=document.getElementById('pmb_apiKey').value.trim();
+  var integrationId=document.getElementById('pmb_integrationId').value.trim();
+  var publicKey=document.getElementById('pmb_publicKey').value.trim();
+  var hmacSecret=document.getElementById('pmb_hmacSecret').value.trim();
+  // منسبّش أي خانة فاضية تمسح قيمة محفوظة قبل كده
+  if(apiKey) body.apiKey=apiKey;
+  if(integrationId) body.integrationId=integrationId;
+  if(publicKey) body.publicKey=publicKey;
+  if(hmacSecret) body.hmacSecret=hmacSecret;
+  fetch(API+'/api/admin/paymob-config',{method:'PUT',headers:{'Content-Type':'application/json','x-admin-token':adminToken},body:JSON.stringify(body)})
+    .then(function(r){return r.json();})
+    .then(function(){ toast('✅ اتحفظت إعدادات Paymob'); loadPaymobConfigUI(); })
+    .catch(function(){ toast('❌ حصل خطأ في الحفظ'); });
+}
+
+// ── دفع العميل الفعلي — بيحسب المبلغ من السيرفر نفسه (مش من المتصفح) عشان يبقى دقيق ومينفعش يتغير ──
+function payWithPaymob(){
+  var name=document.getElementById('co_name')?document.getElementById('co_name').value.trim():'';
+  var phone=document.getElementById('co_phone')?document.getElementById('co_phone').value.trim():'';
+  if(!name||!phone){toast(lang==='ar'?'اكتب اسمك ورقمك الأول':'Enter your name and phone first');return;}
+  if(!cart.length){toast(lang==='ar'?'السلة فارغة':'Cart is empty');return;}
+  var btn=document.getElementById('paymobPayBtn');
+  if(btn){btn.textContent='⏳ جاري التجهيز...';btn.disabled=true;}
+  fetch(API+'/api/payment/paymob/init',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:name,phone:phone,items:cart.map(function(p){return {id:p.id, qty:1};})})
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
+    if(data.ok && data.paymentUrl){
+      window.location.href = data.paymentUrl; // المبلغ هيبقى ظاهر جاهز في صفحة Paymob نفسها، مش محتاج العميل يكتبه
+    } else {
+      toast(lang==='ar'?'الدفع بالفيزا مش متاح دلوقتي، جرب فودافون كاش أو إنستاباي':'Card payment unavailable right now, try another method');
+    }
+  }).catch(function(){
+    if(btn){btn.textContent='💳 ادفع دلوقتي بالفيزا';btn.disabled=false;}
+    toast(lang==='ar'?'حصل خطأ، جرب تاني':'Something went wrong, try again');
+  });
 }
 
 // ── Sections Visibility ──
